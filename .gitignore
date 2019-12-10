@@ -1,4 +1,6 @@
-config/site.php
+**/config/database.php
+concrete/*
 files/cache/*
 files/tmp/*
-.htaccess
+*.zip
+.vscode/*
