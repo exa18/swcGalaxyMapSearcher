@@ -86,6 +86,7 @@ require_once "_pkg/config.php";
 		.accordion li{opacity:unset;-webkit-transition:all .4s ease;-o-transition:all .4s ease;transition:all .4s ease;background-color:transparent}
 		.accordion li:hover{background-color:<?=$c_color?>}
 		.accordion li:hover a{color:<?=$c_base?>}
+		#progress{height:8px;line-height:6px;width:100%;border:1px solid #ccc;}
 	</style>
 </head>
 <body>
@@ -94,7 +95,9 @@ require_once "_pkg/config.php";
 	<div class="row">
     <div>
 <?php
-    echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION .'</span><br><small>'.$meta['desc'].'</small></h1></div>';
+	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION .'</span><br><small>'.$meta['desc'].'</small></h1></div>';
+	echo '<div id="progress" style="display:none;"></div>';
+	flush();
     
     /*
         Get all Sectors
@@ -109,18 +112,23 @@ require_once "_pkg/config.php";
         preg_match('/(\d+)/', $s, $id);
         //echo "Sector: " . $name . " / " . $id[1] . " . ";
         $sector[$id[1]] = $name;
-    }
+	}
+	echo '<script language="javascript">$("#progress").show(300);</script>';
+	flush();
+
 	/*
 		Search sector inside
 		get: systemID
 	*/
+	$sector_total = count($sector);
 	$system_total = 0;
 	$planet_total = 0;
 	$station_total = 0;
 	$city_total = 0;
 
     $time = microtime(true);
-	
+	$i=0;
+	$i_total=$sector_total;
 	foreach($sector as $id => $sname){
 	
 		$level = 0;
@@ -128,10 +136,21 @@ require_once "_pkg/config.php";
 	    $html = htmlGet($u);
 	    $table = tableGet($html);
 		
-		$system = $table[0];
-		$system_total += count($system);
-		
-		foreach($system as $sid => $sv){
+		$system[$id] = $table[0];
+		$system_total += count($system[$id]);
+
+		$percent = intval($i/$i_total * 100);
+		echo '<script language="javascript">
+		document.getElementById("progress").innerHTML="<div style=\"width:'.$percent.'%;background-color:#ddd;\">&nbsp;</div>";
+		</script>'; 
+		flush();
+
+		//if ($percent>=100) { break; }
+		$i++;
+	}
+
+
+	//	foreach($system as $sid => $sv){
 	/*	
 		
 			$level = 1;
@@ -156,15 +175,20 @@ require_once "_pkg/config.php";
 				$city_total += count($surface);
 			}
 		*/
-		}
-	}
-	echo "Secotrs: " . count($sector) . "<br>";
+	//	}
+
+	echo '<script language="javascript">$("#progress").hide(200);</script>'; 
+	flush();
+
+	echo "Secotrs: " . $sector_total . "<br>";
 	echo "Systems: " . $system_total . "<br>";
 	echo "Planets: " . $planet_total . "<br>";
 	echo "Stations: " . $station_total . "<br>";
 	echo "Cities: " . $city_total . "<br>";
     $time = number_format(microtime(true) - $time, 5, '.','');
 	echo "<br>Execute in $time seconds<br>";
+
+	flush();
 	/*
 		Search system inside
 		get: planetID, stations
@@ -174,7 +198,7 @@ require_once "_pkg/config.php";
 	/*
 		Search surface of planet
 	*/
-	$time = microtime(true);
+/* 	$time = microtime(true);
 	
 	$testuri = 'https://www.swcombine.com/rules/?Galaxy_Map&planetID=1573';
 	$html = htmlGet($testuri);
@@ -185,7 +209,7 @@ require_once "_pkg/config.php";
 		}    
     echo "<br>Surface: " . count($surface[1]);
     $time = number_format(microtime(true) - $time, 5, '.','');
-	echo "<br>Execute in $time seconds<br>";
+	echo "<br>Execute in $time seconds<br>"; */
 ?>    
     
 
