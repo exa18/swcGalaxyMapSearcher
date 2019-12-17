@@ -9,11 +9,11 @@ https://www.swcombine.com/rules/?Galaxy_Map
 preg_match('/href=\"([\/\?\&;=\d\w\s]*)\".*alt=\"([\w]*)\"/', $input_line, $output_array);
 href=\"([\/\?\&;=\d\w]*)\".*alt=\"([\w]*)\"
 ```
-to jest OK:
+this is OK:
 ```
 preg_match_all('/href=\"([\/\?\&;=\d\w]*)\".*alt=\"(.*)\"\s/', $input_lines, $output_array);
 ```
-lub to:
+but this too and simpler:
 ```
 preg_match_all('/href=\"(.*)\".*alt=\"(.*)\"\s/', $input_lines, $output_array);
 ```
@@ -50,7 +50,7 @@ preg_match('/(\d+)/', $input_line, $output_array);
 </tr>
 </table>
 ```
-///LUB:
+///OR:
 ```
 <table class="rulesTable sortable" align="left">
 <tr>
@@ -124,7 +124,7 @@ preg_match('/(\d+)/', $input_line, $output_array);
 ## PLANET level:
 #### City names:
 ```
-preg_match_all('/reg_pointCaption\(\"(.*)\"/', $input_lines, $output_array);
+preg_match_all('/reg_pointCaption\((.*\d)\)/', $input_lines, $output_array);
 ```
 
 ```
