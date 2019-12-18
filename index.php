@@ -86,7 +86,8 @@ require_once "_pkg/config.php";
 		.accordion li{opacity:unset;-webkit-transition:all .4s ease;-o-transition:all .4s ease;transition:all .4s ease;background-color:transparent}
 		.accordion li:hover{background-color:<?=$c_color?>}
 		.accordion li:hover a{color:<?=$c_base?>}
-		#progress{height:8px;line-height:6px;width:100%;border:1px solid #ccc;}
+		#progress{height:8px;line-height:6px;width:100%;border:1px solid <?=$c_acclink?>;}
+		#progress > div {width:0;background-color:<?=$c_color?>;}
 	</style>
 </head>
 <body>
@@ -96,14 +97,14 @@ require_once "_pkg/config.php";
     <div>
 <?php
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION .'</span><br><small>'.$meta['desc'].'</small></h1></div>';
-	echo '<div id="progress" style="display:none;"></div>';
+	echo '<div id="progress" style="display:none;"><div>&nbsp;</div></div>';
 	flush();
     
     /*
         Get all Sectors
     */
     $html = htmlGet($swcuri);
-    preg_match_all('/href=\"([\/\?\&;=\d\w]*)\".*alt=\"(.*)\"\s/', $html, $sector);
+    preg_match_all('/href=\"(.*)\".*alt=\"(.*)\"\s/', $html, $sector);
     $u = $sector[1];
     $names = $sector[2];
     $sector=array();
@@ -141,7 +142,7 @@ require_once "_pkg/config.php";
 
 		$percent = intval($i/$i_total * 100);
 		echo '<script language="javascript">
-		document.getElementById("progress").innerHTML="<div style=\"width:'.$percent.'%;background-color:#ddd;\">&nbsp;</div>";
+		document.getElementById("progress").innerHTML="<div style=\"width:'.$percent.'%;\">&nbsp;</div>";
 		</script>'; 
 		flush();
 
