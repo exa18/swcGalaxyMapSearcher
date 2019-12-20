@@ -1,5 +1,7 @@
 <?
 require_once "_pkg/config.php";
+require_once "_pkg/class_progress.php";
+
 	/*
 		COLORs
 	*/
@@ -41,11 +43,11 @@ require_once "_pkg/config.php";
 		2 => "planetID",
 		3 => "surface"
 	);
-?>
+	
+	$progress = 'progress';
+	$progress_status = '_status';
 
-<html>
-<head>
-	<?=trim('
+	echo trim('<html><head>
 	<meta http-equiv="content-type" content="text/html;charset=UTF-8" />
 	<meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
 	<meta name="viewport" content="width=device-width, initial-scale=1" />
@@ -60,11 +62,12 @@ require_once "_pkg/config.php";
 	<script type="text/javascript" src="'.$links['jquery'].'"></script>
 	<link rel="stylesheet" href="'.$links['fontawesome'].'" />
 	<link rel="stylesheet" href="'.$links['css'].'" />
-	')?>
+	');
+	?>
 	<style type="text/css">
-		@import url('https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap&subset=latin-ext');
+		@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap&subset=latin-ext);
 		*{margin:0;padding:0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}
-		body{background:<?=$c_background?>;font-family:'Open Sans',Arial,Helvetica,Sans-serif,Verdana,Tahoma;width:100%;height:100%}
+		body{background:<?=$c_background?>;font-family:Open Sans,Arial,Helvetica,Sans-serif,Verdana,Tahoma;width:100%;height:100%}
 		.row{display:flex;justify-content:center;align-items:center;height:100%;margin:auto}
 		.row>div{text-align:center}
 		h1 small{color:<?=$c_subcolor?>}
@@ -86,18 +89,16 @@ require_once "_pkg/config.php";
 		.accordion li{opacity:unset;-webkit-transition:all .4s ease;-o-transition:all .4s ease;transition:all .4s ease;background-color:transparent}
 		.accordion li:hover{background-color:<?=$c_color?>}
 		.accordion li:hover a{color:<?=$c_base?>}
-		#progress{height:8px;line-height:6px;width:100%;border:1px solid <?=$c_acclink?>;}
-		#progress > div {width:0;background-color:<?=$c_color?>;}
+		#<?=$progress?>{height:8px;line-height:6px;width:100%;border:1px solid <?=$c_acclink?>;-webkit-transition: all 0.3s ease;transition: all 0.3s ease;
+		}
+		#<?=$progress?> > div {width:0;background-color:<?=$c_color?>;}
+		#<?=$progress?><?=$progress_status?>{color:<?=$c_acclink?>;-webkit-transition: all 0.3s ease;transition: all 0.3s ease;}
 	</style>
-</head>
-<body>
-
-<div class="container">
-	<div class="row">
-    <div>
 <?php
+	echo '</head><body><div class="container"><div class="row"><div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION .'</span><br><small>'.$meta['desc'].'</small></h1></div>';
-	echo '<div id="progress" style="display:none;"><div>&nbsp;</div></div>';
+	echo '<div id="progress" style="display:none;opacity:0;"><div>&nbsp;</div></div>';
+	echo '<div id="progress_status" style="display:none;opacity:0;">&nbsp;</div>';
 	flush();
     
     /*
@@ -107,48 +108,79 @@ require_once "_pkg/config.php";
     preg_match_all('/href=\"(.*)\".*alt=\"(.*)\"\s/', $html, $sector);
     $u = $sector[1];
     $names = $sector[2];
-    $sector=array();
+	$sector=array();
+	
     foreach($u as $k => $s){
         $name = $names[$k];
         preg_match('/(\d+)/', $s, $id);
-        //echo "Sector: " . $name . " / " . $id[1] . " . ";
-        $sector[$id[1]] = $name;
+		$sector[$id[1]] = $name;
 	}
-	echo '<script language="javascript">$("#progress").show(300);</script>';
-	flush();
-
 	/*
 		Search sector inside
-		get: systemID
+		get: systemID and system stats
+
+		$system = array(
+			sectorID => array(
+				systemID => array(
+					Name => string
+					Position => string
+					Suns => string
+					Planets => string
+					Moons => string
+					AsteroidFields => string
+					Stations => string
+					Population => string
+					ControlledBy => string
+				)
+			)
+		)
 	*/
 	$sector_total = count($sector);
 	$system_total = 0;
 	$planet_total = 0;
 	$station_total = 0;
 	$city_total = 0;
+	
+	$moon_total = 0;
+	$asteroid_total = 0;
+	$suns_total = 0;
+	$nosuns_total = 0;
 
+	$status_bar = new progressBar($sector_total,"Sectors:");
+	$status_bar->show();
+	$level = 0;
+	
     $time = microtime(true);
 	$i=0;
-	$i_total=$sector_total;
+	$system=array();
 	foreach($sector as $id => $sname){
 	
-		$level = 0;
 	    $u = $swcuri . '&'.$map_level[$level] . '=' . $id;
 	    $html = htmlGet($u);
 	    $table = tableGet($html);
-		
 		$system[$id] = $table[0];
+		/*
+			Counts statistics
+		*/
+		foreach ($system[$id] as $tv) {
+			$planet_total += (int)$tv['Planets'];
+			$station_total += (int)$tv['Stations'];
+			$moon_total += (int)$tv['Moons'];
+			$asteroid_total += (int)$tv['AsteroidFields'];
+			if ((int)$tv['Suns']>1) {
+				$suns_total++;
+			}
+			if ((int)$tv['Suns']<1) {
+				$nosuns_total++;
+			}
+		}
 		$system_total += count($system[$id]);
 
-		$percent = intval($i/$i_total * 100);
-		echo '<script language="javascript">
-		document.getElementById("progress").innerHTML="<div style=\"width:'.$percent.'%;\">&nbsp;</div>";
-		</script>'; 
-		flush();
-
-		//if ($percent>=100) { break; }
+		$status_bar->update($i);
+		//if ($i>10) {break;}
 		$i++;
 	}
+	$status_bar->hide();
 
 
 	//	foreach($system as $sid => $sv){
@@ -178,14 +210,15 @@ require_once "_pkg/config.php";
 		*/
 	//	}
 
-	echo '<script language="javascript">$("#progress").hide(200);</script>'; 
-	flush();
-
+	
 	echo "Secotrs: " . $sector_total . "<br>";
 	echo "Systems: " . $system_total . "<br>";
 	echo "Planets: " . $planet_total . "<br>";
 	echo "Stations: " . $station_total . "<br>";
-	echo "Cities: " . $city_total . "<br>";
+	echo "Moons: " . $moon_total . "<br>";
+	echo "Asteroid Fields: " . $asteroid_total . "<br>";
+	echo "MultiSun systems: " . $suns_total . "<br>";
+	echo "NO-Sun systems: " . $suns_total . "<br>";
     $time = number_format(microtime(true) - $time, 5, '.','');
 	echo "<br>Execute in $time seconds<br>";
 
@@ -211,11 +244,6 @@ require_once "_pkg/config.php";
     echo "<br>Surface: " . count($surface[1]);
     $time = number_format(microtime(true) - $time, 5, '.','');
 	echo "<br>Execute in $time seconds<br>"; */
-?>    
-    
 
-</div>
-</div>
-</div>
-</body>
-</html>
+echo '</div></div></div></body></html>';
+?>

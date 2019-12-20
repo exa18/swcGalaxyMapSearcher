@@ -1,7 +1,4 @@
 <?php
-function cookieSet($name,$value){
-	setcookie($name, $value, time()+2*24*60*60);
-}
 function htmlGet($uri){
 	$htmlContent = @file_get_contents($uri);
 	if ($htmlContent!==false){

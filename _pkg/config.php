@@ -10,7 +10,7 @@ $url = $url[0] . "://". $_SERVER["HTTP_HOST"];
 define('_DB_MAIN', "$db_host|$db_user|$db_pass|$db_db");
 define('_DB_SALT', 'LPijEJaiua0jwG8DNpxZ3uT0dh');
 define('_BASEURI', $url);
-define('_VERSION', '20191217');
+define('_VERSION', '20191220');
 
 /*
 	start
@@ -20,7 +20,7 @@ require_once "session.php";
 require_once "functions.php";
 
 $session = Session::getInstance();
-$session->swcgs_version = _VERSION;
+$session->swcgms_version = _VERSION;
 //$db = new mydb( _DB_MAIN );
 
 ?>
