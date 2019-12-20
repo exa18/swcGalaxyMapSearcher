@@ -143,7 +143,7 @@ require_once "_pkg/class_progress.php";
 	
 	$moon_total = 0;
 	$asteroid_total = 0;
-	$suns_total = 0;
+	$suns_total = array();
 	$nosuns_total = 0;
 
 	$status_bar = new progressBar($sector_total,"Sectors:");
@@ -167,17 +167,22 @@ require_once "_pkg/class_progress.php";
 			$station_total += (int)$tv['Stations'];
 			$moon_total += (int)$tv['Moons'];
 			$asteroid_total += (int)$tv['AsteroidFields'];
-			if ((int)$tv['Suns']>1) {
-				$suns_total++;
+			$suns = intval($tv['Suns']);
+			if ( $suns>1 ) {
+				if ( array_key_exists($suns, $suns_total) ) {
+					$suns_total[$suns] += 1;
+				}else{
+					$suns_total[$suns] = 1;
+				}
 			}
-			if ((int)$tv['Suns']<1) {
+			if ( $suns<1 ) {
 				$nosuns_total++;
 			}
 		}
 		$system_total += count($system[$id]);
 
 		$status_bar->update($i);
-		//if ($i>10) {break;}
+		//if ($i>100) {break;}
 		$i++;
 	}
 	$status_bar->hide();
@@ -209,7 +214,14 @@ require_once "_pkg/class_progress.php";
 			}
 		*/
 	//	}
-
+	$suns=0;
+	$suns_temp=array();
+	ksort($suns_total);
+	foreach($suns_total as $sk => $sv){
+		$suns += $sv;
+		$suns_temp[] = $sk . ' s. =' . $sv;
+	}
+	$suns_temp = implode(', ',$suns_temp);
 	
 	echo "Secotrs: " . $sector_total . "<br>";
 	echo "Systems: " . $system_total . "<br>";
@@ -217,8 +229,8 @@ require_once "_pkg/class_progress.php";
 	echo "Stations: " . $station_total . "<br>";
 	echo "Moons: " . $moon_total . "<br>";
 	echo "Asteroid Fields: " . $asteroid_total . "<br>";
-	echo "MultiSun systems: " . $suns_total . "<br>";
-	echo "NO-Sun systems: " . $suns_total . "<br>";
+	echo "MultiSun systems: " . $suns . ' where is ' . $suns_temp . "<br>";
+	echo "NO-Sun systems: " . $nosuns_total . "<br>";
     $time = number_format(microtime(true) - $time, 5, '.','');
 	echo "<br>Execute in $time seconds<br>";
 
