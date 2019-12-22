@@ -50,34 +50,9 @@ preg_match('/(\d+)/', $input_line, $output_array);
 </tr>
 </table>
 ```
-///OR:
-```
-<table class="rulesTable sortable" align="left">
-<tr>
-    <th>Image</th>
-    <th>Name</th>
-    <th>Position</th>
-    <th>Type</th>
-    <th>Size</th>
-    <th>Population</th>
-    <th>Controlled By</th>
-    <th>Homeworld</th>
-</tr>
-<tr>
-    <td><img src="https://img.swcombine.com//galaxy/planets/11/mini.gif" alt="Polith Asteroid Cloud" /></td>
-    <td><a href="/rules/?Galaxy_Map&amp;planetID=2864">Polith Asteroid Cloud</a></td>
-    <td>1, 11</td>
-    <td>Asteroid Field</td>
-    <td>1x1</td>
-    <td>3,092</td>
-    <td><a href="/community/factions.php?facName=Galactic+Empire">Galactic Empire</a></td>
-    <td>-</td>
-</tr>
-</table>
-```
 
 ## SYSTEM Level
-#### Planet list:
+#### Planets list:
 ```
 <table class="rulesTable sortable" align="left">
 <tr>
@@ -132,4 +107,28 @@ bjMap.reg_areaCaption("Forest",6,19,12,19);
 objMap.reg_areaCaption("Ocean",13,19,19,19);
 objMap.reg_pointCaption("Thyferra 09-00",9,0);
 objMap.reg_pointCaption("Sheridan",10,0);
+```
+
+## Instalation
+
+#### Database
+###### Level 0: Sectors
+```
+CREATE TABLE `sector` ( `sectorID` INT NOT NULL , `sectorName` TEXT NOT NULL ) ENGINE = InnoDB; 
+```
+###### Level 1: Systems
+```
+CREATE TABLE `system` ( `sectorID` INT NOT NULL , `systemID` INT NOT NULL , `systemName` TEXT NOT NULL , `systemPosition` TEXT NOT NULL , `systemSuns` TEXT NOT NULL , `systemPlanets` TEXT NOT NULL , `systemMoons` TEXT NOT NULL , `systemAsteroidFields` TEXT NOT NULL , `systemStations` TEXT NOT NULL , `systemPopulation` TEXT NOT NULL , `systemControlledBy` TEXT NOT NULL ) ENGINE = InnoDB; 
+```
+###### Level 2: Planets list
+```
+CREATE TABLE `planet` ( `systemID` INT NOT NULL , `planetID` INT NOT NULL , `planetName` TEXT NOT NULL , `planetPosition` TEXT NOT NULL , `planetType` TEXT NOT NULL , `planetSize` TEXT NOT NULL , `planetPopulation` TEXT NOT NULL , `planetControlledBy` TEXT NOT NULL , `planetHomeworld` TEXT NOT NULL ) ENGINE = InnoDB; 
+```
+###### Level 2: Stations list
+```
+CREATE TABLE `station` ( `systemID` INT NOT NULL , `stationName` TEXT NOT NULL , `stationPosition` TEXT NOT NULL , `stationType` TEXT NOT NULL , `stationOwner` TEXT NOT NULL ) ENGINE = InnoDB; 
+```
+###### Level 3: Surface
+```
+CREATE TABLE `surface` ( `planetID` INT NOT NULL , `planetCaption` TEXT NOT NULL , `planetPosition` TEXT NOT NULL ) ENGINE = InnoDB; 
 ```
