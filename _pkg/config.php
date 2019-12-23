@@ -21,6 +21,5 @@ require_once "functions.php";
 
 $session = Session::getInstance();
 $session->swcgms_version = _VERSION;
-//$db = new mydb( _DB_MAIN );
 
 ?>

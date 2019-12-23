@@ -1,6 +1,7 @@
 <?
 require_once "_pkg/config.php";
 require_once "_pkg/class_progress.php";
+$db = new mydb( _DB_MAIN );
 
 	/*
 		COLORs
@@ -102,19 +103,52 @@ require_once "_pkg/class_progress.php";
 	flush();
     
     /*
-        Get all Sectors
+        Sectors check and update
     */
     $html = htmlGet($swcuri);
     preg_match_all('/href=\"(.*)\".*alt=\"(.*)\"\s/', $html, $sector);
     $u = $sector[1];
     $names = $sector[2];
 	$sector=array();
-	
+	$level = 0;
+
+	$status_bar = new progressBar(count($u),"Updating sector:");
+	$status_bar->show();
+	$i=0;
     foreach($u as $k => $s){
         $name = $names[$k];
-        preg_match('/(\d+)/', $s, $id);
-		$sector[$id[1]] = $name;
+		preg_match('/(\d+)/', $s, $id);
+		$id = $id[1];
+		$sector[$id] = $name;
+
+		$query = 'SELECT * FROM `sector` WHERE sectorID='.$id;
+		$q= $db->fetch($query);
+		if ( empty($q) ) {
+			$query = "INSERT `sector` (sectorID, sectorName) VALUES ({$id},\"{$name}\")";
+		}else{
+			$query = "UPDATE `sector` SET sectorName=\"{$name}\" WHERE sectorID={$id}";
+		}
+		$db->query($query);
+		$status_bar->update($i);
+		$i++;
 	}
+	/*
+		Check and clean DB
+	*/
+	$query = 'SELECT * FROM `sector`';
+	$q= $db->fetch($query);
+	$qs=array();
+	foreach ($q as $n) {
+		$id = $n['sectorID'];
+		if ( isset($sector[$id]) ){
+			$qs[$id] = $n['sectorName'];
+		}else{
+			$query = "DELETE FROM `sector` WHERE sectorID={$id}";
+			$db->query($query);
+		}
+	}
+	$sector=$qs;
+
 	/*
 		Search sector inside
 		get: systemID and system stats
@@ -146,9 +180,8 @@ require_once "_pkg/class_progress.php";
 	$suns_total = array();
 	$nosuns_total = 0;
 
-	$status_bar = new progressBar($sector_total,"Sectors:");
+	$status_bar = new progressBar($sector_total,"Sector:");
 	$status_bar->show();
-	$level = 0;
 	
     $time = microtime(true);
 	$i=0;
@@ -158,33 +191,68 @@ require_once "_pkg/class_progress.php";
 	    $u = $swcuri . '&'.$map_level[$level] . '=' . $id;
 	    $html = htmlGet($u);
 	    $table = tableGet($html);
-		$system[$id] = $table[0];
+		if ( !empty($table[0]) ) {
+			$system[$id] = $table[0];
 		/*
 			Counts statistics
 		*/
-		foreach ($system[$id] as $tv) {
-			$planet_total += (int)$tv['Planets'];
-			$station_total += (int)$tv['Stations'];
-			$moon_total += (int)$tv['Moons'];
-			$asteroid_total += (int)$tv['AsteroidFields'];
-			$suns = intval($tv['Suns']);
-			if ( $suns>1 ) {
-				if ( array_key_exists($suns, $suns_total) ) {
-					$suns_total[$suns] += 1;
+			foreach ($system[$id] as $tid => $tv) {
+
+				$query = "SELECT * FROM `system` WHERE sectorID={$id} AND systemID={$tid}";
+				$q= $db->fetch($query);
+
+				$planet = (int)$tv['Planets'];
+				$station = (int)$tv['Stations'];
+				$moon = (int)$tv['Moons'];
+				$asteroid = (int)$tv['AsteroidFields'];
+				$suns = intval($tv['Suns']);
+
+				if ( empty($q) ) {
+					$query = "INSERT `system` (sectorID,systemID,systemName,systemPosition,systemSuns,systemPlanets,systemMoons,systemAsteroidFields,systemStations,systemPopulation,systemControlledBy) VALUES ({$id},{$tid},\"{$tv['Name']}\",\"{$tv['Position']}\",\"{$suns}\",\"{$planet}\",\"{$moon}\",\"{$asteroid}\",\"{$station}\",\"{$tv['Population']}\",\"{$tv['ControlledBy']}\")";
 				}else{
-					$suns_total[$suns] = 1;
+					
+					$query = "UPDATE `system` SET systemName=\"{$tv['Name']}\", systemPosition=\"{$tv['Position']}\", systemSuns=\"{$suns}\", systemPlanets=\"{$planet}\", systemMoons=\"{$moon}\", systemAsteroidFields=\"{$asteroid}\", systemStations=\"{$station}\", systemPopulation=\"{$tv['Population']}\", systemControlledBy=\"{$tv['ControlledBy']}\" WHERE sectorID={$id} AND systemID={$tid}";
+				}
+				$db->query($query);
+
+				$planet_total += (int)$tv['Planets'];
+				$station_total += (int)$tv['Stations'];
+				$moon_total += (int)$tv['Moons'];
+				$asteroid_total += (int)$tv['AsteroidFields'];
+
+				if ( $suns>1 ) {
+					if ( array_key_exists($suns, $suns_total) ) {
+						$suns_total[$suns] += 1;
+					}else{
+						$suns_total[$suns] = 1;
+					}
+				}
+				if ( $suns<1 ) {
+					$nosuns_total++;
 				}
 			}
-			if ( $suns<1 ) {
-				$nosuns_total++;
-			}
+			$system_total += count($system[$id]);
 		}
-		$system_total += count($system[$id]);
-
 		$status_bar->update($i);
 		//if ($i>100) {break;}
 		$i++;
 	}
+
+	/*
+		Read system and convert to array
+	*/
+	$query = 'SELECT * FROM `system`';
+	$q= $db->fetch($query);
+	$qs=array();
+	foreach ($q as $n) {
+		$id = $n['sectorID'];
+			unset($n['sectorID']);
+		$tid = $n['systemID'];
+			unset($n['systemID']);
+		$qs[$id][$tid] = $n;
+	}
+	$system=$qs;
+
 	$status_bar->hide();
 
 

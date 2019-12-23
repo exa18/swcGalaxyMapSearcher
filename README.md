@@ -132,3 +132,5 @@ CREATE TABLE `station` ( `systemID` INT NOT NULL , `stationName` TEXT NOT NULL ,
 ```
 CREATE TABLE `surface` ( `planetID` INT NOT NULL , `planetCaption` TEXT NOT NULL , `planetPosition` TEXT NOT NULL ) ENGINE = InnoDB; 
 ```
+## Performance
+1. Read systems and its inside takes: ~4,5 minutes
