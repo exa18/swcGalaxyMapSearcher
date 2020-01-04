@@ -1,4 +1,7 @@
 <?php
+function removeSpaces($text){
+		return preg_replace('/\s+/', '', $text);
+}
 function htmlGet($uri){
 	$htmlContent = @file_get_contents($uri);
 	if ($htmlContent!==false){

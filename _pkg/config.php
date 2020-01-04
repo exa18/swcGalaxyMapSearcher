@@ -10,7 +10,7 @@ $url = $url[0] . "://". $_SERVER["HTTP_HOST"];
 define('_DB_MAIN', "$db_host|$db_user|$db_pass|$db_db");
 define('_DB_SALT', 'd39kQqyZNFAgGLWGCKNm95KR');
 define('_BASEURI', $url);
-define('_VERSION', '20191220');
+define('_VERSION', '20200102');
 
 /*
 	start

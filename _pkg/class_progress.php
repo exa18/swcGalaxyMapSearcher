@@ -42,7 +42,8 @@ class progressBar {
 	function statusBuild($i){
 		$s = $this->status;
 		if($s){
-			return $s . ' ' . $i . '/' . $this->total;
+			$p = $i . '/' . $this->total;
+			return str_replace("%s",$p,$s);
 		}
 	}
     function update($i){

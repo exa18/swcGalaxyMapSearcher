@@ -102,6 +102,9 @@ $db = new mydb( _DB_MAIN );
 	echo '<div id="progress_status" style="display:none;opacity:0;">&nbsp;</div>';
 	flush();
     
+    $time = microtime(true);
+    
+    if ($_GET['update']) {
     /*
         Sectors check and update
     */
@@ -112,7 +115,7 @@ $db = new mydb( _DB_MAIN );
 	$sector=array();
 	$level = 0;
 
-	$status_bar = new progressBar(count($u),"Updating sector:");
+	$status_bar = new progressBar(count($u),"Updating sector");
 	$status_bar->show();
 	$i=0;
     foreach($u as $k => $s){
@@ -180,10 +183,9 @@ $db = new mydb( _DB_MAIN );
 	$suns_total = array();
 	$nosuns_total = 0;
 
-	$status_bar = new progressBar($sector_total,"Sector:");
+	$status_bar = new progressBar($sector_total,"Sector: %s");
 	$status_bar->show();
 	
-    $time = microtime(true);
 	$i=0;
 	$system=array();
 	foreach($sector as $id => $sname){
@@ -206,12 +208,12 @@ $db = new mydb( _DB_MAIN );
 				$moon = (int)$tv['Moons'];
 				$asteroid = (int)$tv['AsteroidFields'];
 				$suns = intval($tv['Suns']);
+				$pos = removeSpaces($tv['Position']);
 
 				if ( empty($q) ) {
-					$query = "INSERT `system` (sectorID,systemID,systemName,systemPosition,systemSuns,systemPlanets,systemMoons,systemAsteroidFields,systemStations,systemPopulation,systemControlledBy) VALUES ({$id},{$tid},\"{$tv['Name']}\",\"{$tv['Position']}\",\"{$suns}\",\"{$planet}\",\"{$moon}\",\"{$asteroid}\",\"{$station}\",\"{$tv['Population']}\",\"{$tv['ControlledBy']}\")";
+					$query = "INSERT `system` (sectorID,systemID,systemName,systemPosition,systemSuns,systemPlanets,systemMoons,systemAsteroidFields,systemStations,systemPopulation,systemControlledBy) VALUES ({$id},{$tid},\"{$tv['Name']}\",\"{$pos}\",\"{$suns}\",\"{$planet}\",\"{$moon}\",\"{$asteroid}\",\"{$station}\",\"{$tv['Population']}\",\"{$tv['ControlledBy']}\")";
 				}else{
-					
-					$query = "UPDATE `system` SET systemName=\"{$tv['Name']}\", systemPosition=\"{$tv['Position']}\", systemSuns=\"{$suns}\", systemPlanets=\"{$planet}\", systemMoons=\"{$moon}\", systemAsteroidFields=\"{$asteroid}\", systemStations=\"{$station}\", systemPopulation=\"{$tv['Population']}\", systemControlledBy=\"{$tv['ControlledBy']}\" WHERE sectorID={$id} AND systemID={$tid}";
+					$query = "UPDATE `system` SET systemName=\"{$tv['Name']}\", systemPosition=\"{$pos}\", systemSuns=\"{$suns}\", systemPlanets=\"{$planet}\", systemMoons=\"{$moon}\", systemAsteroidFields=\"{$asteroid}\", systemStations=\"{$station}\", systemPopulation=\"{$tv['Population']}\", systemControlledBy=\"{$tv['ControlledBy']}\" WHERE sectorID={$id} AND systemID={$tid}";
 				}
 				$db->query($query);
 
@@ -237,10 +239,40 @@ $db = new mydb( _DB_MAIN );
 		//if ($i>100) {break;}
 		$i++;
 	}
-
 	/*
-		Read system and convert to array
+		Check and clean DB
 	*/
+	$query = 'SELECT * FROM `system`';
+	$q= $db->fetch($query);
+	$qs=array();
+	foreach ($q as $n) {
+		$id = $n['sectorID'];
+			unset($n['sectorID']);
+		$tid = $n['systemID'];
+			unset($n['systemID']);
+		if ( isset($system[$id][$tid]) ){
+			$qs[$id][$tid] = $n;
+		}else{
+			$query = "DELETE FROM `system` WHERE sectorID={$id} AND systemID={$tid}";
+			$db->query($query);
+		}
+	}
+	$system=$qs;
+	}
+	
+	/*
+		Read and convert to array
+	*/
+	$query = 'SELECT * FROM `sector`';
+	$q= $db->fetch($query);
+	$qs=array();
+	foreach ($q as $n) {
+		$id = $n['sectorID'];
+		$qs[$id] = $n['sectorName'];
+	}
+	$sector=$qs;
+	$sector_total = count($sector);
+	
 	$query = 'SELECT * FROM `system`';
 	$q= $db->fetch($query);
 	$qs=array();
@@ -252,7 +284,86 @@ $db = new mydb( _DB_MAIN );
 		$qs[$id][$tid] = $n;
 	}
 	$system=$qs;
-
+	$system_total = count($q);
+	/*
+		Level 3: Planets and Stations
+	*/
+	$level = 1;
+	$status_bar = new progressBar($system_total,"Planets and stations: %s");
+	$status_bar->show();
+	$i=0;
+	$planets=array();
+	$stations=array();
+	$prefix = 'system';
+	foreach($sector as $id => $sname){
+		foreach ($system[$id] as $tid => $tv) {
+			$planet = (int)$tv[$prefix.'Planets'] + (int)$tv[$prefix.'Moons'] + (int)$tv[$prefix.'AsteroidFields'] + (int)$tv[$prefix.'Suns'];
+			$station = (int)$tv[$prefix.'Stations'];
+			if ($planet>0 or $station>0) {
+				$u = $swcuri . '&'.$map_level[$level] . '=' . $tid;
+			    $html = htmlGet($u);
+			    $table = tableGet($html);
+			    if ($planet>0 or count($table)>1 ) {
+			        $planet = $table[0];
+			        if ($station>0) {
+			            $station = $table[1];
+					}
+			    }else{
+			        if ($station>0) {
+			            $station = $table[0];
+					}			        
+			    }
+				if ( !empty($planet) ) {
+					foreach($planet as $pid => $pv){
+						$planets[$tid][$pid] = $pv;
+						$homeworld = trim($pv['Homeworld']);
+						$controlled = trim($pv['ControlledBy']);
+						if ( strlen($homeworld)<2 ) {
+							$homeworld = '';
+						}
+						if ( strlen($controlled)<2 ) {
+							$controlled = '';
+						}
+						$pos = removeSpaces($pv['Position']);
+						if ( strlen($pos)<2 ) {
+							$pos = '';
+						}
+						$query = "SELECT * FROM `planet` WHERE systemID={$tid} AND planetID={$pid}";
+						$q= $db->fetch($query);
+						if ( empty($q) ) {
+							$query = "INSERT `planet` (systemID,planetID,planetName,planetPosition,planetType,planetSize,planetPopulation,planetControlledBy,planetHomeworld) VALUES ({$tid},{$pid},\"{$pv['Name']}\",\"{$pos}\",\"{$pv['Type']}\",\"{$pv['Size']}\",\"{$pv['Population']}\",\"{$controlled}\",\"{$homeworld}\")";
+						}else{
+							$query = "UPDATE `planet` SET planetName=\"{$pv['Name']}\", planetPosition=\"{$pos}\", planetType=\"{$pv['Type']}\", planetSize=\"{$pv['Size']}\", planetPopulation=\"{$pv['Population']}\", planetControlledBy=\"{$controlled}\", planetHomeworld=\"{$homeworld}\" WHERE systemID={$tid} AND planetID={$pid}";
+						}
+						$db->query($query);
+					}
+				}
+				if ( !empty($station) ) {
+					$si = 0;
+					foreach($station as $sv){
+						$sname = (string)$sv[1];
+						$spos = removeSpaces($sv[2]);
+						$stype = (string)$sv[3];
+						$sowner = strip_tags((string)$sv[4]);
+						$sid = hash( 'sha256', $si . $tid . $sname . $spos . $stype . $sowner );
+						$stations[$tid][] = array( $sname, $spos, $stype, $sowner);
+						$query = "SELECT * FROM `station` WHERE stationID=\"{$sid}\" AND systemID={$tid}";
+						$q= $db->fetch($query);
+						if ( empty($q) ) {
+							$query = "INSERT `station` (systemID,stationID,stationName,stationPosition,stationType,stationOwner) VALUES ({$tid},\"{$sid}\",\"{$sname}\",\"{$spos}\",\"{$stype}\",\"{$sowner}\")";
+							$si++;
+						}else{
+							$query = "UPDATE `station` SET stationName=\"{$sname}\", stationType=\"{$stype}\", stationOwner=\"{$sowner}\" WHERE stationID=\"{$sid}\" AND systemID={$tid}";
+						}
+						$db->query($query);
+					}
+				}
+			}
+		$status_bar->update($i);
+		$i++;
+		}
+	}
+	
 	$status_bar->hide();
 
 
@@ -273,10 +384,15 @@ $db = new mydb( _DB_MAIN );
 				$level = 2;
 			    $u = $swcuri . '&'.$map_level[$level] . '=' . $pid;
 			    $html = htmlGet($u);
-			    preg_match_all('/reg_pointCaption\((.*)\)/', $html, $surface);
-			    $surface = $surface[1];
-		        foreach($surface[1] as $v){
+			    //preg_match_all('/reg_pointCaption\((.*)\)/', $html, $surface);
+			    preg_match_all('/reg_pointCaption\(\"(.*)\".*(\d+\,\d+)\)/', $html, $surface);
+			    $caption = $surface[1];
+			    $position = $surface[2];
+			    if (count($caption)>0) {
+		        foreach($caption as $k=>$v){
+		        $sid = hash( 'sha256', $k . $v . $position[$k]);
 		            //echo $v . " // ";
+				}
 				}
 				$city_total += count($surface);
 			}
