@@ -99,7 +99,7 @@ preg_match('/(\d+)/', $input_line, $output_array);
 ## PLANET level:
 #### City names:
 ```
-preg_match_all('/reg_pointCaption\((.*\d)\)/', $input_lines, $output_array);
+preg_match_all('/reg_pointCaption\(\"(.*)\".*(\d+\,\d+)\)/',  $input_lines, $output_array);
 ```
 
 ```
@@ -130,7 +130,14 @@ CREATE TABLE `station` ( `systemID` INT NOT NULL , `stationName` TEXT NOT NULL ,
 ```
 ###### Level 3: Surface
 ```
-CREATE TABLE `surface` ( `planetID` INT NOT NULL , `planetCaption` TEXT NOT NULL , `planetPosition` TEXT NOT NULL ) ENGINE = InnoDB; 
+CREATE TABLE `surface` ( `planetID` INT NOT NULL `surfaceID` TEXT NOT NULL , , `surfaceCaption` TEXT NOT NULL , `surfacePosition` TEXT NOT NULL ) ENGINE = InnoDB;
 ```
+###### Race index
+```
+CREATE TABLE `races` ( `raceID` INT NOT NULL , `raceName` TEXT NOT NULL ) ENGINE = InnoDB; 
+```
+
 ## Performance
-1. Read systems and its inside takes: ~4,5 minutes
+1. Level 1 & 0 : Read sector and systems: ~4,5 minutes
+2. Level 2 : Read systems and get planets and stations: ~16,5 minutes
+3. Level 3 : Read planets and get surface (only custom): ??

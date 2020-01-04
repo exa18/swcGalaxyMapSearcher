@@ -35,9 +35,56 @@ $db = new mydb( _DB_MAIN );
 		$tags = ' ( #'.implode(' #',$meta["tags"]) . ' )';
 	}
 
-	
-	$swcuri = 'https://www.swcombine.com/rules/?Galaxy_Map';
-	
+	$swcuri = 'https://www.swcombine.com/';
+	$swcuri_map = $swcuri . 'rules/?Galaxy_Map';
+
+	if ($_GET['update']) {
+
+		$html = htmlGet($swcuri . 'rules/?Races');
+		preg_match_all('/href=\"\?.*ID=(\d+)"\stitle=\".*\:(.*)\"\>/U', $html, $races);
+		$races_list = array();
+		foreach($races[1] as $k => $id){
+			$name = $races[2][$k];
+			$query = "SELECT * FROM `races` WHERE raceID={$id}";
+			$q= $db->fetch($query);
+			if ( empty($q) ) {
+				$query = "INSERT `races` (raceID,raceName) VALUES ({$id},\"{$name}\")";
+			}else{
+				$query = "UPDATE `races` SET raceName=\"{$name}\" WHERE raceID={$id}";
+			}
+			$db->query($query);
+			$races_list[$id] = $name;
+		}
+		/*
+		Check and clean DB
+		*/
+		$query = 'SELECT * FROM `races`';
+		$q= $db->fetch($query);
+		foreach ($q as $n) {
+			$id = $n['raceID'];
+			$name = $n['raceName'];
+			if ( !isset($races_list[$id]) ){
+				$query = "DELETE FROM `races` WHERE raceID={$id}";
+				$db->query($query);
+			}
+		}
+
+		}
+
+		$query = 'SELECT * FROM `races`';
+		$q= $db->fetch($query);
+		$races_list = array();
+		foreach ($q as $k => $n) {
+			$id = $n['raceID'];
+			$name = $n['raceName'];
+			$races_list[$k]['id'] = (int)$id;
+			$races_list[$k]['name'] = $name;
+		}
+		$r = rand( 0,count($races_list)-1 );
+		$race['id'] = $races_list[$r]['id'];
+		$race['uri'] = 'https://img.swcombine.com/races/' . $race['id'] .'/main.jpg';
+		$race['name'] = $races_list[$r]['name'];
+			
 	$map_level = array(
 		0 => "sectorID",
 		1 => "systemID",
@@ -83,13 +130,16 @@ $db = new mydb( _DB_MAIN );
 		.tags:hover{background:rgba(255,255,255,0.3) none repeat scroll 0 0;border:1px solid rgba(255,255,255,0.5);border-radius:0;display:inline-block;font-size:13px;margin:4px 0 0;padding:2px 5px}
 		ul{list-style-type:none}
 		a,a:hover,a:focus,a:active{text-decoration:none;outline:none;border:0;outline-offset:0}
-		h1{color:<?=$c_base?>;font-size:24px;font-weight:400;text-align:center;margin-top:2rem;line-height:1.5}
+		h1{font-size:24px;font-weight:400;text-align:center;margin-top:2rem;line-height:1.5}
+		h1,h2,h3,h4,h5,h6{color:<?=$c_base?>}
 		h1 a{color:<?=$c_color?>;font-size:16px}
 		.accordion{width:100%;max-width:360px;margin:30px auto 20px;-webkit-border-radius:0;-moz-border-radius:0;border-radius:0;display:flex}
 		.accordion li:last-child .link{border-bottom:0}
 		.accordion li{opacity:unset;-webkit-transition:all .4s ease;-o-transition:all .4s ease;transition:all .4s ease;background-color:transparent}
 		.accordion li:hover{background-color:<?=$c_color?>}
 		.accordion li:hover a{color:<?=$c_base?>}
+		.swc_member {border-bottom:1px solid <?=$c_acclink?>}
+		.swc_member img{width:100px}
 		#<?=$progress?>{height:8px;line-height:6px;width:100%;border:1px solid <?=$c_acclink?>;-webkit-transition: all 0.3s ease;transition: all 0.3s ease;
 		}
 		#<?=$progress?> > div {width:0;background-color:<?=$c_color?>;}
@@ -97,18 +147,19 @@ $db = new mydb( _DB_MAIN );
 	</style>
 <?php
 	echo '</head><body><div class="container"><div class="row"><div>';
+	echo '<div class="swc_member"><a href="' . $swcuri . 'rules/?Races&amp;ID=' . $race['id'] . '"><img src="' . $race['uri'] . '" alt="' . $race['name'] . '" /><h6>' . $race['name'] . '</h6></a></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION .'</span><br><small>'.$meta['desc'].'</small></h1></div>';
 	echo '<div id="progress" style="display:none;opacity:0;"><div>&nbsp;</div></div>';
 	echo '<div id="progress_status" style="display:none;opacity:0;">&nbsp;</div>';
 	flush();
     
-    $time = microtime(true);
+	$time = microtime(true);
     
     if ($_GET['update']) {
     /*
         Sectors check and update
     */
-    $html = htmlGet($swcuri);
+    $html = htmlGet($swcuri_map);
     preg_match_all('/href=\"(.*)\".*alt=\"(.*)\"\s/', $html, $sector);
     $u = $sector[1];
     $names = $sector[2];
@@ -190,7 +241,7 @@ $db = new mydb( _DB_MAIN );
 	$system=array();
 	foreach($sector as $id => $sname){
 	
-	    $u = $swcuri . '&'.$map_level[$level] . '=' . $id;
+	    $u = $swcuri_map . '&'.$map_level[$level] . '=' . $id;
 	    $html = htmlGet($u);
 	    $table = tableGet($html);
 		if ( !empty($table[0]) ) {
@@ -285,6 +336,8 @@ $db = new mydb( _DB_MAIN );
 	}
 	$system=$qs;
 	$system_total = count($q);
+
+	if ($_GET['update']) {
 	/*
 		Level 3: Planets and Stations
 	*/
@@ -300,7 +353,7 @@ $db = new mydb( _DB_MAIN );
 			$planet = (int)$tv[$prefix.'Planets'] + (int)$tv[$prefix.'Moons'] + (int)$tv[$prefix.'AsteroidFields'] + (int)$tv[$prefix.'Suns'];
 			$station = (int)$tv[$prefix.'Stations'];
 			if ($planet>0 or $station>0) {
-				$u = $swcuri . '&'.$map_level[$level] . '=' . $tid;
+				$u = $swcuri_map . '&'.$map_level[$level] . '=' . $tid;
 			    $html = htmlGet($u);
 			    $table = tableGet($html);
 			    if ($planet>0 or count($table)>1 ) {
@@ -363,7 +416,7 @@ $db = new mydb( _DB_MAIN );
 		$i++;
 		}
 	}
-	
+}
 	$status_bar->hide();
 
 
@@ -371,7 +424,7 @@ $db = new mydb( _DB_MAIN );
 	/*	
 		
 			$level = 1;
-		    $u = $swcuri . '&'.$map_level[$level] . '=' . $sid;
+		    $u = $swcuri_map . '&'.$map_level[$level] . '=' . $sid;
 		    $html = htmlGet($u);
 		    $table = tableGet($html);
 			
@@ -382,7 +435,7 @@ $db = new mydb( _DB_MAIN );
 		/*	
 			foreach($planet as $pid => $pv){
 				$level = 2;
-			    $u = $swcuri . '&'.$map_level[$level] . '=' . $pid;
+			    $u = $swcuri_map . '&'.$map_level[$level] . '=' . $pid;
 			    $html = htmlGet($u);
 			    //preg_match_all('/reg_pointCaption\((.*)\)/', $html, $surface);
 			    preg_match_all('/reg_pointCaption\(\"(.*)\".*(\d+\,\d+)\)/', $html, $surface);
