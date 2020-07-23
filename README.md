@@ -1,6 +1,12 @@
 # swcGalaxyMapSearcher
 swCombine GalaxyMap convert to DB for easeir access to searched data, https://www.swcombine.com/
 
+![GitHub issues](https://img.shields.io/github/issues/exa18/swcGalaxyMapSearcher?style=flat-square)
+![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/1?style=flat-square)
+![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/2?style=flat-square)
+![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/3?style=flat-square)
+
+
 ## MAP Level
 https://www.swcombine.com/rules/?Galaxy_Map
 
