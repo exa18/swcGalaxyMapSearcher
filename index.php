@@ -3,6 +3,11 @@ require_once "_pkg/config.php";
 require_once "_pkg/class_progress.php";
 $db = new mydb( _DB_MAIN );
 
+	$maps = [
+		"normal" => "high&amp;political=0",
+		"political" => "high&amp;political=1",
+		"mono" => "gray",
+	];
 	/*
 		COLORs
 	*/
@@ -18,7 +23,7 @@ $db = new mydb( _DB_MAIN );
 		'fontawesome' => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css',
 		'jquery' => 'https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js'
 	);
-	
+
 	$meta=array(
 		"fbapi" => '',
 		"tags" => '',
@@ -38,38 +43,37 @@ $db = new mydb( _DB_MAIN );
 	$swcuri = 'https://www.swcombine.com/';
 	$swcuri_map = $swcuri . 'rules/?Galaxy_Map';
 
-	if ($_GET['update']) {
+if ($_GET['update']) {
 
-		$html = htmlGet($swcuri . 'rules/?Races');
-		preg_match_all('/href=\"\?.*ID=(\d+)"\stitle=\".*\:(.*)\"\>/U', $html, $races);
-		$races_list = array();
-		foreach($races[1] as $k => $id){
-			$name = $races[2][$k];
-			$query = "SELECT * FROM `races` WHERE raceID={$id}";
-			$q= $db->fetch($query);
-			if ( empty($q) ) {
-				$query = "INSERT `races` (raceID,raceName) VALUES ({$id},\"{$name}\")";
-			}else{
-				$query = "UPDATE `races` SET raceName=\"{$name}\" WHERE raceID={$id}";
-			}
-			$db->query($query);
-			$races_list[$id] = $name;
-		}
-		/*
-		Check and clean DB
-		*/
-		$query = 'SELECT * FROM `races`';
+	$html = htmlGet($swcuri . 'rules/?Races');
+	preg_match_all('/href=\"\?.*ID=(\d+)"\stitle=\".*\:(.*)\"\>/U', $html, $races);
+	$races_list = array();
+	foreach($races[1] as $k => $id){
+		$name = $races[2][$k];
+		$query = "SELECT * FROM `races` WHERE raceID={$id}";
 		$q= $db->fetch($query);
-		foreach ($q as $n) {
-			$id = $n['raceID'];
-			$name = $n['raceName'];
-			if ( !isset($races_list[$id]) ){
-				$query = "DELETE FROM `races` WHERE raceID={$id}";
-				$db->query($query);
-			}
+		if ( empty($q) ) {
+			$query = "INSERT `races` (raceID,raceName) VALUES ({$id},\"{$name}\")";
+		}else{
+			$query = "UPDATE `races` SET raceName=\"{$name}\" WHERE raceID={$id}";
 		}
-
+		$db->query($query);
+		$races_list[$id] = $name;
+	}
+	/*
+	Check and clean DB
+	*/
+	$query = 'SELECT * FROM `races`';
+	$q= $db->fetch($query);
+	foreach ($q as $n) {
+		$id = $n['raceID'];
+		$name = $n['raceName'];
+		if ( !isset($races_list[$id]) ){
+			$query = "DELETE FROM `races` WHERE raceID={$id}";
+			$db->query($query);
 		}
+	}
+}
 
 		$query = 'SELECT * FROM `races`';
 		$q= $db->fetch($query);
@@ -84,6 +88,7 @@ $db = new mydb( _DB_MAIN );
 		$race['id'] = $races_list[$r]['id'];
 		$race['uri'] = 'https://img.swcombine.com/races/' . $race['id'] .'/main.jpg';
 		$race['name'] = $races_list[$r]['name'];
+		$race['url'] = $swcuri . 'rules/?Races&amp;ID=' . $race['id'];
 			
 	$map_level = array(
 		0 => "sectorID",
@@ -138,8 +143,9 @@ $db = new mydb( _DB_MAIN );
 		.accordion li{opacity:unset;-webkit-transition:all .4s ease;-o-transition:all .4s ease;transition:all .4s ease;background-color:transparent}
 		.accordion li:hover{background-color:<?=$c_color?>}
 		.accordion li:hover a{color:<?=$c_base?>}
-		.swc_member {border-bottom:1px solid <?=$c_acclink?>}
-		.swc_member img{width:100px}
+		.swc_race {border-bottom:1px solid <?=$c_acclink?>}
+		.swc_race img{width:100px}
+		.inputfield{margin:1.5em auto;width:18em}
 		#<?=$progress?>{height:8px;line-height:6px;width:100%;border:1px solid <?=$c_acclink?>;-webkit-transition: all 0.3s ease;transition: all 0.3s ease;
 		}
 		#<?=$progress?> > div {width:0;background-color:<?=$c_color?>;}
@@ -147,15 +153,31 @@ $db = new mydb( _DB_MAIN );
 	</style>
 <?php
 	echo '</head><body><div class="container"><div class="row"><div>';
-	echo '<div class="swc_member"><a href="' . $swcuri . 'rules/?Races&amp;ID=' . $race['id'] . '"><img src="' . $race['uri'] . '" alt="' . $race['name'] . '" /><h6>' . $race['name'] . '</h6></a></div>';
+	echo '<div class="swc_race"><a href="' . $race['url'] . '"><img src="' . $race['uri'] . '" alt="' . $race['name'] . '" /><h6>' . $race['name'] . '</h6></a></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION .'</span><br><small>'.$meta['desc'].'</small></h1></div>';
+	echo '<div class="inputfield"><input type="text" class="form-control" id="mySearchable" onkeyup="mySearchableList()" placeholder="Search . . ."></div>';
 	echo '<div id="progress" style="display:none;opacity:0;"><div>&nbsp;</div></div>';
 	echo '<div id="progress_status" style="display:none;opacity:0;">&nbsp;</div>';
+	echo '<div id="search_area"></div>';
 	flush();
     
 	$time = microtime(true);
-    
-    if ($_GET['update']) {
+
+if ($_GET['update']) {
+	/*
+		Maps image generate
+	*/
+	$status_bar = new progressBar(count($maps),"Generating map images");
+	$status_bar->show();
+	$mapurl='https://www.swcombine.com/rules/the_universe/galaxy_map/galaxyMap.php?mode=';
+	$i=0;
+	foreach($maps as $k=>$v){
+		imageSave($mapurl.$v,'./_maps/'.$k.'.gif');
+		$status_bar->update($i);
+		$i++;
+	}
+}
+if ($_GET['update']) {
     /*
         Sectors check and update
     */
@@ -309,7 +331,7 @@ $db = new mydb( _DB_MAIN );
 		}
 	}
 	$system=$qs;
-	}
+}
 	
 	/*
 		Read and convert to array
@@ -337,7 +359,7 @@ $db = new mydb( _DB_MAIN );
 	$system=$qs;
 	$system_total = count($q);
 
-	if ($_GET['update']) {
+if ($_GET['update']) {
 	/*
 		Level 3: Planets and Stations
 	*/
@@ -354,18 +376,18 @@ $db = new mydb( _DB_MAIN );
 			$station = (int)$tv[$prefix.'Stations'];
 			if ($planet>0 or $station>0) {
 				$u = $swcuri_map . '&'.$map_level[$level] . '=' . $tid;
-			    $html = htmlGet($u);
-			    $table = tableGet($html);
-			    if ($planet>0 or count($table)>1 ) {
-			        $planet = $table[0];
-			        if ($station>0) {
-			            $station = $table[1];
+				$html = htmlGet($u);
+				$table = tableGet($html);
+				if ($planet>0 or count($table)>1 ) {
+					$planet = $table[0];
+					if ($station>0) {
+						$station = $table[1];
 					}
-			    }else{
-			        if ($station>0) {
-			            $station = $table[0];
+				}else{
+					if ($station>0) {
+						$station = $table[0];
 					}			        
-			    }
+				}
 				if ( !empty($planet) ) {
 					foreach($planet as $pid => $pv){
 						$planets[$tid][$pid] = $pv;
@@ -416,8 +438,8 @@ $db = new mydb( _DB_MAIN );
 		$i++;
 		}
 	}
-}
 	$status_bar->hide();
+}
 
 
 	//	foreach($system as $sid => $sv){
@@ -495,4 +517,5 @@ $db = new mydb( _DB_MAIN );
 	echo "<br>Execute in $time seconds<br>"; */
 
 echo '</div></div></div></body></html>';
+
 ?>
