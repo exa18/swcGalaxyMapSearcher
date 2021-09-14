@@ -3,4 +3,5 @@ concrete/*
 files/cache/*
 files/tmp/*
 *.zip
+*.gif
 .vscode/*
