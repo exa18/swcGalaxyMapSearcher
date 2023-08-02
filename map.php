@@ -1,14 +1,26 @@
 <?php
-//require_once "_pkg/class_progress.php";
-
+/*
+	Settings
+*/
 $url = explode(":",$_SERVER["SCRIPT_URI"]);
 $url = $url[0] . "://". $_SERVER["HTTP_HOST"];
 define('_BASEURI', $url);
 define('_VERSION', '1.0');
 define('_API',"https://www.swcombine.com/ws/v2.0/");
-
 /*
-	Define update intervals
+	API links
+*/
+$url_sectors = _API . "galaxy/sectors/";
+$url_systems = _API . "galaxy/systems/";
+/*
+	HTML SWC Galaxy Map link
+*/
+$galaxymap = "https://www.swcombine.com/rules/?Galaxy_Map&sectorID=";
+/*
+	Define update intervals or do force update
+	?forceupdate=all -> do it all
+	?forceupdate=sectors
+	?forceupdate=systems
 */
 $updateinterval = 180;
 $updatesectors = false;
@@ -28,10 +40,11 @@ if ( $forceupdate = htmlspecialchars($_GET["forceupdate"]) ){
 		default: break;
 	}
 }
+/*
 
-/* $cookie_prefix = "SWCMP_";
-$cookie_map = "${cookie_prefix}MAPS"; */
+	FUNTIONS
 
+*/
 function get_xml_from_url($url){
 	$ch = curl_init($url);
 
@@ -75,53 +88,31 @@ function fileHowOld($file){
 function flieDownloadCSV( $array, $filename = "export.csv", $delimiter="\t" )
 {
 	$filename = fileCleanName($filename) . ".csv";
-    header( 'Content-Type: application/csv' );
-    header( 'Content-Disposition: attachment; filename="' . $filename . '";' );
+	header( 'Content-Type: application/csv' );
+	header( 'Content-Disposition: attachment; filename="' . $filename . '";' );
 
-    // clean output buffer
-    ob_end_clean();
-    
-    $handle = fopen( 'php://output', 'w' );
+	// clean output buffer
+	ob_end_clean();
+	
+	$handle = fopen( 'php://output', 'w' );
 
-    // use keys as column titles
-    //fputcsv( $handle, array_keys( $array['0'] ), $delimiter );
+	// use keys as column titles
+	//fputcsv( $handle, array_keys( $array['0'] ), $delimiter );
 
-    foreach ( $array as $value ) {
-        fputcsv( $handle, $value, $delimiter );
-    }
+	foreach ( $array as $value ) {
+		fputcsv( $handle, $value, $delimiter );
+	}
 
-    fclose( $handle );
+	fclose( $handle );
 
-    // flush buffer
-    ob_flush();
-    
-    // use exit to get rid of unexpected output afterward
-    exit();
+	// flush buffer
+	ob_flush();
+	
+	// use exit to get rid of unexpected output afterward
+	exit();
 }
-    /*
-        COOKIES
-    */
-	/* 
-    function heSetCookie($name, $val='', $days=1){
-        if ( !empty($name) ) {
-            setcookie($name, $val, time() + (86400 * $days), "/");
-        }
-    }
-    function heGetCookie($name){
-        if (!empty($name)){
-            return $_COOKIE[$name];
-        }
-        return NULL;
-    } */
-
-
-$url_sectors = _API . "galaxy/sectors/";
-$url_systems = _API . "galaxy/systems/";
-
-$galaxymap = "https://www.swcombine.com/rules/?Galaxy_Map&sectorID=";
-
 /*
-	Read all sectors and factions
+	Read and write all sectors and factions inside
 */
 $lastupdatesectors = fileHowOld("sectors");
 if ( (!file_exists("sectors") OR !file_exists("factions")) OR $lastupdatesectors>$updateinterval ){
@@ -160,7 +151,7 @@ if ( (!file_exists("sectors") OR !file_exists("factions")) OR $lastupdatesectors
 	fileSave("factions",$factions);
 }
 /*
-	Read all systems
+	Read and write all systems
 */
 $lastupdatesystems = fileHowOld("systems");
 if ( !file_exists("systems") OR $lastupdatesystems>$updateinterval){
@@ -192,49 +183,13 @@ if ( !file_exists("systems") OR $lastupdatesystems>$updateinterval){
 	}
 	fileSave("systems",$systems);
 }
+
+/*
+	Load data
+*/
 	$sectors = fileLoad("sectors");
 	$factions = fileLoad("factions");
 	$systems = fileLoad("systems");
-
-/*
-	Read all sectors
-*/
-/*
-if ( empty(heGetCookie($cookie_map)) ){
-	$start_index = 1;
-	$item_count = 50;
-	$total = 0;
-	$sectors = [];
-	
-	$i = -1;
-	while($i<$total){
-		$file = get_xml_from_url($url_sectors."?start_index=".$start_index."&item_count=".$item_count);
-		$xml = simplexml_load_string($file);
-		if ($total==0){
-			$total = $xml->sectors['total'];
-			$i = 0;
-			//$status_bar = new progressBar($total,"Downloading sectors");
-			//$status_bar->show();
-		}
-		foreach($xml->sectors->sector as $v){
-			//$sectors[$i]['name'] = (string)$v['name'];
-			//$sectors[$i]['link'] = (string)$v['href'];
-			$sectors[] = (string)$v['name'];
-			$i++;
-			//$status_bar->update($i);
-		}
-		$start_index += $item_count;
-	}
-	//$status_bar->hide();
-	$json = json_encode($sectors);
-	$compressedJSON = gzdeflate($json, 9);
-	heSetCookie($cookie_map,$compressedJSON);
-}else{
-	$json = gzinflate(heGetCookie($cookie_map));
-	$sectors = json_decode($json);
-}
-*/
-
 /*
 
 	Download file when ?getmap=UID
@@ -281,8 +236,6 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			$p = $xml->sector->coordinates->point[$i];
 			$x = intval($p['x']);
 			$y = intval($p['y']);
-			//echo $i . " : " . $x. ", " . $y . "\n";
-			//$cords[] = [ 'x' =>$x, 'y' => $y ];
 			$cords[$i]['x'] = $x;
 			$cords[$i]['y'] = $y;
 			$border['min']['x'] = min($border['min']['x'],$x);
@@ -291,24 +244,29 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			$border['max']['y'] = max($border['max']['y'],$y);
 			$i++;
 		}
-		// Add square space
+		// Add square space around
 		$border['min']['x'] -=1;
 		$border['min']['y'] -=1;
 		$border['max']['x'] +=1;
 		$border['max']['y'] +=1;
 
-		$iy = 0;
 		// WIDTH
 		$w = abs(abs($border['max']['x']) - abs($border['min']['x']))+1;
 		// HIGTH
 		$h = abs(abs($border['max']['y']) - abs($border['min']['y']))+1;
-
+		// MARKS
+		$val = 1;	// area
+		$valborder = 2;	// border -> space between sectors
+		$valsystem = 's';	// known systems
+		
 		$map = [];
 		$rowx = [];
 		$rowy = [];
-
+		
+			$iy = 0;
 			$ix = 0;
 			$m = [];
+			// create first row
 			$rowx[] = "x->";
 			while($ix < $w){
 				$cix = $ix + $border['min']['x'];
@@ -316,22 +274,23 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 				$m[$cix] = '';
 				$ix++;
 			}
+			// add galaxy map link
 			$rowx[] = $galaxymap . $uid;
+			// create empty rows
 			while($iy<$h){
 				$ciy = $border['max']['y'] - $iy;
 				$rowy[] = $ciy;
 				$map[$ciy] = $m;
 				$iy++;
 			}
-
+		// mark first
 		foreach($cords as $cc){
 			$x = $cc['x'];
 			$y = $cc['y'];
-			$map[$y][$x] = 1;
+			$map[$y][$x] = $val;
 		}
+		
 		// Horizontal fill
-		$val = 1;
-		$valborder = 2;
 		foreach($map as $y => $va){
 			$fill = false;
 			foreach($va as $x => $v){
@@ -364,11 +323,12 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 						}
 						// add lower border
 						$map[$iy-1][$x] = $valborder;
+						// and fill
 						while($iy<$y) {
 							$map[$iy][$x] = $val;
 							$iy++;
 						}
-						// add upper border
+						// add upper border and next
 						$map[$iy+1][$x] = $valborder;
 						break;
 					}
@@ -389,29 +349,33 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			}
 			$map[$y][$ix+1] = $valborder;
 		}
+		// add systems
 		foreach($system as $s) {
 			$y=intval($s['y']);
 			$x=intval($s['x']);
-			$map[$y][$x] = 's';
+			$map[$y][$x] = $valsystem;
 		}
 
+		// prepare CSV
 			$csv = [];
+			// add first row
 			$csv[] = $rowx;
 			$x=0;
 			foreach($rowy as $v){
-				//echo $v . "\t" . implode("\t",$map[$v]) . "\n";
 				$m = $map[$v];
+				// add first col
 				array_unshift($m, $v);
 				$csv[] = $m;
 			}
-
-			flieDownloadCSV( $csv, $sectors['name'][$uid] );
+		flieDownloadCSV( $csv, $sectors['name'][$uid] );
 	}
 }
 
-	/*
-		HTML
-	*/
+/*
+
+	HTML (show website)
+
+*/
 	$c_background = '#456';
 	$c_subbackground = '#567';
 	$c_base = '#fff';
@@ -440,10 +404,7 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 /* 	if ($meta["tags"]) {
 		$tags = ' ( #'.implode(' #',$meta["tags"]) . ' )';
 	}
-
-$progress = 'progress';
-$progress_status = '_status';
- */
+*/
 echo trim('<html><head>
 <meta http-equiv="content-type" content="text/html;charset=UTF-8" />
 <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1" />
@@ -489,25 +450,9 @@ echo trim('<html><head>
 	.accordion li:hover a{color:<?=$c_base?>}
 	.list-box.list-group-item span {display:block;font-size:70%;}
 	.list-box.list-group-item {padding:0.5em;line-height:1.35;border: 1px solid <?=$c_subcolor?>;border-radius:0;}
-	<?/*.swc_race {border-bottom:1px solid <?=$c_acclink?>}
-	.swc_race img{width:100px}*/?>
 	.inputfield{margin:1.5em auto;}
-	#search_area{
-		height: calc(100vh / 2);
-		overflow-y: auto;
-	}
-	#mySearchable {
-		margin-bottom:2.5em;
-		height:3em;
-		text-align:center;
-		float: unset;
-		margin: 0 auto;
-		border-radius:0;
-	}
-	#<?=$progress?>{height:8px;line-height:6px;width:100%;border:1px solid <?=$c_acclink?>;-webkit-transition: all 0.3s ease;transition: all 0.3s ease;
-	}
-	#<?=$progress?> > div {width:0;background-color:<?=$c_color?>;}
-	#<?=$progress?><?=$progress_status?>{color:<?=$c_acclink?>;-webkit-transition: all 0.3s ease;transition: all 0.3s ease;}
+	#search_area{height: calc(100vh / 2);overflow-y: auto;}
+	#mySearchable {margin-bottom:2.5em;height:3em;text-align:center;float: unset;margin: 0 auto;border-radius:0;}
 </style>
 <script>
 	var swc = {
@@ -539,14 +484,11 @@ echo trim('<html><head>
 	$api = $api[1];
 
 	echo '</head><body><div class="container"><div class="row"><div>';
-	echo '<div class="swc_race"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $race['name'] . '" /></div><h6><b>api ' . $api .'</b><br>'. ($updateinterval - min($lastupdatesectors,$lastupdatesystems)) . ' days till update</h6></div>';
+	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $race['name'] . '" /></div><h6><b>api ' . $api .'</b><br>'. ($updateinterval - min($lastupdatesectors,$lastupdatesystems)) . ' days till update</h6></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION . '</span><br><small>'.$meta['desc'].'</small></h1></div>';
 	echo '<div class="inputfield"><input type="text" class="form-control" id="mySearchable" onkeyup="mySearchableList()" placeholder="Search . . .">
 	</div>';
-	echo '<div id="progress" style="display:none;opacity:0;"><div>&nbsp;</div></div>';
-	echo '<div id="progress_status" style="display:none;opacity:0;">&nbsp;</div>';
 	echo '<div id="search_area">';
-
 	
 		$list = $sectors['name'];
 		asort($list);
@@ -558,8 +500,5 @@ echo trim('<html><head>
 		}
 	echo '</div>';
 	flush();
-
-
-
 
 echo '</div></div></div></body></html>';
