@@ -3,6 +3,27 @@ require_once "_pkg/config.php";
 require_once "_pkg/class_progress.php";
 $db = new mydb( _DB_MAIN );
 
+define('_VERSIONdev', '(dev) api 2.0');
+use const _VERSIONdev as _VERSION;
+
+/*
+
+API 2.0
+
+1 / +50
+https://www.swcombine.com/ws/v2.0/galaxy/sectors/?start_index=1
+2
+https://www.swcombine.com/ws/v2.0/galaxy/systems/?start_index=1
+	https://www.swcombine.com/ws/v2.0/galaxy/systems/9:33
+3
+https://www.swcombine.com/ws/v2.0/galaxy/planets/?start_index=1
+	https://www.swcombine.com/ws/v2.0/galaxy/planets/8:411
+4
+https://www.swcombine.com/ws/v2.0/galaxy/cities/
+https://www.swcombine.com/ws/v2.0/galaxy/stations/
+	https://www.swcombine.com/ws/v2.0/galaxy/stations/5:6329
+
+*/
 	$maps = [
 		"normal" => "high&amp;political=0",
 		"political" => "high&amp;political=1",
