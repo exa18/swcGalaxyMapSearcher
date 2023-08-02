@@ -3,4 +3,9 @@ concrete/*
 files/cache/*
 files/tmp/*
 *.zip
+*.gif
 .vscode/*
+factions
+systems
+sectors
+*.txt
