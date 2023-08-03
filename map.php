@@ -22,7 +22,7 @@ $galaxymap = "https://www.swcombine.com/rules/?Galaxy_Map&sectorID=";
 	?forceupdate=sectors
 	?forceupdate=systems
 */
-$updateinterval = 180;
+$updateinterval = 365;
 $updatesectors = false;
 $updatesystems = false;
 if ( $forceupdate = htmlspecialchars($_GET["forceupdate"]) ){
@@ -475,6 +475,7 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 	$meta=array(
 		"fbapi" => '',
 		//"tags" => '',
+		"download" => 'swcGalaxyMapSearcherTEMPLATE.xlsx',
 		"img" => './_img/swcmapgen.png',
 		"desc" => 'prepare sector map to paste in sheet<br><small>tab delimited and openable as text, despite CSV</small>',
 		"site" => 'swcSectorMap'
@@ -534,6 +535,7 @@ echo trim('<html><head>
 	.list-box.list-group-item span {display:block;font-size:70%;}
 	.list-box.list-group-item {padding:0.5em;line-height:1.35;border: 1px solid <?=$c_subcolor?>;border-radius:0;}
 	.inputfield{margin:1.5em auto;}
+	.btn{border:0;}
 	#search_area{height: calc(100vh / 2);overflow-y: auto;}
 	#mySearchable {margin-bottom:2.5em;height:3em;text-align:center;float: unset;margin: 0 auto;border-radius:0;}
 </style>
@@ -569,6 +571,7 @@ echo trim('<html><head>
 	echo '</head><body><div class="container"><div class="row"><div>';
 	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $race['name'] . '" /></div><h6><b>api ' . $api .'</b><br>'. ($updateinterval - min($lastupdatesectors,$lastupdatesystems)) . ' days till update</h6></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION . '</span><br><small>'.$meta['desc'].'</small></h1></div>';
+	echo '<a href="'.$meta['download'].'" type="button" class="btn btn-success btn-sm btn-block">Download Template to work with</a>';
 	echo '<div class="inputfield"><input type="text" class="form-control" id="mySearchable" onkeyup="mySearchableList()" placeholder="Search . . .">
 	</div>';
 	echo '<div id="search_area">';

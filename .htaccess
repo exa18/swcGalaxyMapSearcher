@@ -8,3 +8,17 @@ RewriteRule .* - [E=noconntimeout:1]
 #php_value upload_max_filesize 2M
 #php_value post_max_size 20M
 php_value max_execution_time 65500
+
+<IfModule mod_rewrite.c>
+  RewriteEngine On
+  RewriteCond %{HTTPS} !=on
+#  RewriteCond %{HTTP_HOST} !h2g.pl$
+#  RewriteCond %{HTTP_HOST} !hekko24.pl$
+#  RewriteCond %{HTTP_HOST} !098.pl$
+##  RewriteRule ^ https://%{HTTP_HOST}%{REQUEST_URI} [L,R=301]
+#  RewriteBase /
+#  RewriteCond %{REQUEST_FILENAME} !-f
+#  RewriteCond %{REQUEST_FILENAME}/index.html !-f
+#  RewriteCond %{REQUEST_FILENAME}/index.php !-f
+#  RewriteRule . index.php [L]
+</IfModule>
