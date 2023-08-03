@@ -66,6 +66,9 @@ function swcGetUid($uid){
 	}
 	return NULL;
 }
+function absLong($a,$b){
+	return abs( abs($a) - abs($b) );
+}
 function fileLoad($file){
 	$c = file_get_contents($file);
 	$json = json_decode($c,true);
@@ -251,9 +254,9 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 		$border['max']['y'] +=1;
 
 		// WIDTH
-		$w = abs(abs($border['max']['x']) - abs($border['min']['x']))+1;
+		$w = absLong($border['max']['x'],$border['min']['x']) +1;
 		// HIGTH
-		$h = abs(abs($border['max']['y']) - abs($border['min']['y']))+1;
+		$h = absLong($border['max']['y'],$border['min']['y']) +1;
 		// MARKS
 		$val = 1;	// area
 		$valborder = 2;	// border -> space between sectors
@@ -283,71 +286,151 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 				$map[$ciy] = $m;
 				$iy++;
 			}
-		// mark first
+		/*
+			Fill Border between points
+		*/
+		$anch = [];
+		$i = 0;
+		// add first also as last
+		$cords[] = [
+			'x' => $cords[0]['x'],
+			'y' => $cords[0]['y']	
+			];
 		foreach($cords as $cc){
 			$x = $cc['x'];
 			$y = $cc['y'];
 			$map[$y][$x] = $val;
-		}
 		
-		// Horizontal fill
-		foreach($map as $y => $va){
-			$fill = false;
-			foreach($va as $x => $v){
-				if ($v AND !$fill) {
-					$fill=true;
-				}elseif($v AND $fill){
-					$fill=false;
+				$anch[] = [
+					'x' => $x,
+					'y' => $y
+					];
+		
+			if (count($anch)==2){
+				$x1 = $anch[0]['x'];
+				$x2 = $anch[1]['x'];
+				$y1 = $anch[0]['y'];
+				$y2 = $anch[1]['y'];
+				$lx = absLong($x1,$x2);
+				$ly = absLong($y1,$y2);
+				if ( $ly OR $lx ){
+					if ($lx>1 AND $ly==0){
+						$z = min($x1,$x2);
+						$e = max($x1,$x2);
+						$y = $y1;
+						while($z<$e){
+							$map[$y][$z] = $val;
+							$z++;
+						}
+					}
+					if ($ly>1 AND $lx==0){
+						$z = min($y1,$y2);
+						$e = max($y1,$y2);
+						$x = $x1;
+						while($z<$e){
+							$map[$z][$x] = $val;
+							$z++;
+						}
+					}
+					
 				}
-				if ($fill){
+				array_shift($anch);
+			}
+			$i++;
+		}
+		/*
+			Flood fill 4x
+		*/
+		$stack = [];
+		// find first free point inside
+			$x = $cords[0]['x'];
+			$y = $cords[0]['y'];
+		while(true){
+			if ($map[$y][$x]){
+				$x++;
+			}else{
+				break;
+			}
+		}
+		$stack[] = [
+			'x' => $x,
+			'y' => $y	
+		];
+		while(count($stack) ){
+			foreach($stack as $s){
+				$x = $s['x'];
+				$y = $s['y'];
+				if ( empty($map[$y][$x])){
 					$map[$y][$x] = $val;
 				}
-			}
-		}
-		// Vertical fill
-		$ix = 0;
-		while($ix <$w) {
-			$x = $ix + $border['min']['x'];
-			$va='';
-			$fill = false;
-			foreach($map as $y => $va){
-					$v = $map[$y][$x];
-					if ($v) {
-						$iy = $border['min']['y'];
-						while($iy<$y) {
-							$v = $map[$iy][$x];
-							if ($v) {
-								break;
-							}
-							$iy++;
-						}
-						// add lower border
-						$map[$iy-1][$x] = $valborder;
-						// and fill
-						while($iy<$y) {
-							$map[$iy][$x] = $val;
-							$iy++;
-						}
-						// add upper border and next
-						$map[$iy+1][$x] = $valborder;
-						break;
-					}
-			}
-			$ix++;
-		}
-		// add horizontal borders
-		foreach($map as $y => $va){
-			foreach($va as $x => $v){
-				if ($v){
-					$map[$y][$x-1] = $valborder;
-					break;
+				array_shift($stack);
+				if ( empty($map[$y][$x-1]) ){
+					$stack[] = [
+						'x' => $x-1,
+						'y' => $y	
+					];
+					$map[$y][$x-1] = $val;
+				}
+				if ( empty($map[$y][$x+1]) ){
+					$stack[] = [
+						'x' => $x+1,
+						'y' => $y	
+					];
+					$map[$y][$x+1] = $val;
+				}
+				if ( empty($map[$y+1][$x]) ){
+					$stack[] = [
+						'x' => $x,
+						'y' => $y+1	
+					];
+					$map[$y+1][$x] = $val;
+				}
+				if ( empty($map[$y-1][$x]) ){
+					$stack[] = [
+						'x' => $x,
+						'y' => $y-1	
+					];
+					$map[$y-1][$x] = $val;
 				}
 			}
-			$ix = $border['max']['x'];
-			while(empty($map[$y][$ix])){
-				$ix--;
+		}
+		/*
+			Borders
+		*/
+		foreach($map as $y => $va){
+			foreach($va as $x => $v){
+				if ($v==$val){
+					if (empty($map[$y][$x-1])){
+						$map[$y][$x-1] = $valborder;
+					}
+					if (empty($map[$y][$x+1])){
+						$map[$y][$x+1] = $valborder;
+					}
+					if (empty($map[$y+1][$x])){
+						$map[$y+1][$x] = $valborder;
+					}
+					if (empty($map[$y-1][$x])){
+						$map[$y-1][$x] = $valborder;
+					}
+				}
 			}
-			$map[$y][$ix+1] = $valborder;
+		}
+		// add extra cross border
+		foreach($cords as $cc){
+			$x = $cc['x'];
+			$y = $cc['y'];
+			if (empty($map[$y-1][$x-1])){
+				$map[$y-1][$x-1] = $valborder;
+			}
+			if (empty($map[$y-1][$x+1])){
+				$map[$y-1][$x+1] = $valborder;
+			}
+			if (empty($map[$y+1][$x-1])){
+				$map[$y+1][$x-1] = $valborder;
+			}
+			if (empty($map[$y+1][$x+1])){
+				$map[$y+1][$x+1] = $valborder;
+			}
 		}
 		// add systems
 		foreach($system as $s) {
