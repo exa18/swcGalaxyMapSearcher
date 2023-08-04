@@ -67,7 +67,7 @@ function swcGetUid($uid){
 	return NULL;
 }
 function absLong($a,$b){
-	return abs( abs($a) - abs($b) );
+	return abs( max($a,$b) - min($a,$b) );
 }
 function fileLoad($file){
 	$c = file_get_contents($file);
@@ -340,6 +340,8 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 		}
 		/*
 			Flood fill 4x
+   			algorythm idea:
+   			source: https://takeuforward.org/graph/flood-fill-algorithm-graphs/
 		*/
 		$stack = [];
 		// find first free point inside
@@ -356,13 +358,11 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			'x' => $x,
 			'y' => $y	
 		];
+		$map[$y][$x] = $val;
 		while(count($stack) ){
 			foreach($stack as $s){
 				$x = $s['x'];
 				$y = $s['y'];
-				if ( empty($map[$y][$x])){
-					$map[$y][$x] = $val;
-				}
 				array_shift($stack);
 				if ( empty($map[$y][$x-1]) ){
 					$stack[] = [
