@@ -468,13 +468,14 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 	
 	$links = array(
 		'css' => 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css',
-		'fontawesome' => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.11.2/css/fontawesome.min.css',
+		'fontawesome' => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
 		'jquery' => 'https://cdnjs.cloudflare.com/ajax/libs/jquery/1.12.4/jquery.min.js'
 	);
 
 	$meta=array(
 		"fbapi" => '',
 		//"tags" => '',
+		"footage" => '<a class="btn btn-xs btn-primary" href="https://github.com/exa18/swcGalaxyMapSearcher"><i class="fab fa-github"></i> Learn more</a>',
 		"download" => 'swcGalaxyMapSearcherTEMPLATE.xlsx',
 		"img" => './_img/swcmapgen.png',
 		"desc" => 'prepare sector map to paste in sheet<br><small>tab delimited and openable as text, despite CSV</small>',
@@ -569,7 +570,7 @@ echo trim('<html><head>
 	$api = $api[1];
 
 	echo '</head><body><div class="container"><div class="row"><div>';
-	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $race['name'] . '" /></div><h6><b>api ' . $api .'</b><br>'. ($updateinterval - min($lastupdatesectors,$lastupdatesystems)) . ' days till update</h6></div>';
+	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $meta['site'] . '" /></div><h6><b>api ' . $api .'</b><br>'. ($updateinterval - min($lastupdatesectors,$lastupdatesystems)) . ' days till update '.$meta['footage'].'</h6></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION . '</span><br><small>'.$meta['desc'].'</small></h1></div>';
 	echo '<a href="'.$meta['download'].'" type="button" class="btn btn-success btn-sm btn-block">Download Template to work with</a>';
 	echo '<div class="inputfield"><input type="text" class="form-control" id="mySearchable" onkeyup="mySearchableList()" placeholder="Search . . .">
