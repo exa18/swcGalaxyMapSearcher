@@ -17,6 +17,12 @@ define('_PATH',[
 ]);
 define('_DB',[
 		'sectors' => _API . "galaxy/sectors/",
-		'systems' => _API . "galaxy/systems/"
+		'systems' => _API . "galaxy/systems/",
+        'faction' => _API . "faction/"
+]);
+define('_CODE',[
+    'sectors' => 25,
+    'systems' => 9,
+    'faction' => 20,
 ]);
 ?>

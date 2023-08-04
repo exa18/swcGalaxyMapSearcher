@@ -6,6 +6,9 @@ require_once '_apk/config.php';
 */
 $url_sectors = _DB['sectors'];
 $url_systems = _DB['systems'];
+/*
+	DATA files
+*/
 $fil_sectors = _PATH['sectors'];
 $fil_systems = _PATH['systems'];
 $fil_factions = _PATH['factions'];
@@ -63,6 +66,10 @@ function swcGetUid($uid){
 	}
 	return NULL;
 }
+function swcMakeUid($uid,$code){
+		return $code . "%3A" . $uid;
+}
+
 function absLong($a,$b){
 	return abs( max($a,$b) - min($a,$b) );
 }
@@ -136,8 +143,6 @@ if ( (!file_exists($fil_sectors) OR !file_exists("factions")) OR $lastupdatesect
 			if ($name) {
 				// SECTOR : name
 				$sectors['name'][$uid] = $name;
-				// SECTOR : url
-				$sectors['u'][$uid] = (string)$v['href'];
 				// SECTOR : population
 				$sectors['population'][$uid] = intval($v->population);
 				// SECTOR : knownsystems
@@ -149,7 +154,6 @@ if ( (!file_exists($fil_sectors) OR !file_exists("factions")) OR $lastupdatesect
 					$sectors['faction'][$uid] = $fid;
 					if (!isset($factions['name'][$fid])){
 						$factions['name'][$fid] = (string)$v->controlledby;
-						$factions['u'][$fid] = (string)$v->controlledby['href'];
 					}
 				}
 			}
@@ -187,8 +191,6 @@ if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
 			if ($name) {
 				// SYSTEM : name
 				$systems['name'][$uid] = $name;
-				// SYSTEM : href
-				$systems['u'][$uid] = (string)$v['href'];
 				// SYSTEM : population
 				$systems['population'][$uid] = intval($v->population);
 				// SYSTEM : sector ID
@@ -201,7 +203,6 @@ if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
 					$systems['faction'][$uid] = $fid;
 					if (!isset($factions['name'][$fid])){
 						$factions['name'][$fid] = (string)$v->controlledby;
-						$factions['u'][$fid] = (string)$v->controlledby['href'];
 					}
 				}
 				// SYSTEM : location inside sector
@@ -227,7 +228,7 @@ if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
 if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 	if ( isset($sectors['name'][$uid]) ){
 
-		$file = get_xml_from_url($sectors['u'][$uid]);
+		$file = get_xml_from_url($url_sectors . swcMakeUid($uid, _CODE['sectors']) );
 		$xml = simplexml_load_string($file);
 
 		/*

@@ -1,25 +1,22 @@
 # swcGalaxyMapSearcher
-[swCombine GalaxyMap](https://www.swcombine.com/) download localy for easeir/faster access to searched data
-Using [API 2.0](https://www.swcombine.com/ws/v2.0/)
+[swCombine GalaxyMap](https://www.swcombine.com/) download localy for easeir/faster access to searched data. Using [API 2.0](https://www.swcombine.com/ws/v2.0/)
 
 
 ## MAP
 What data are downloaded?
 
-### SECTOR
+### SECTOR (25)
 ```
     uid
     name
-    href
     controlledby
     knownsystems
     population
 ```
-### SYSTEM
+### SYSTEM (9)
 ```
     uid
     name
-    href
     population
     controlledby
     location->sector
@@ -28,15 +25,15 @@ What data are downloaded?
         x
         y
 ```
-### FACTION
+### FACTION (20)
 ```
+    uid
     name
-    href
 ```
 ## Refresh performance
 
-SECTORs : ~30s\
-SYSTEMs : ~60s
+SECTORs : ~10s\
+SYSTEMs : ~25s
 
 
 ## API v2.0 guides
