@@ -1,21 +1,18 @@
 <?php
-/*
-	Settings
-*/
-$url = explode(":",$_SERVER["SCRIPT_URI"]);
-$url = $url[0] . "://". $_SERVER["HTTP_HOST"];
-define('_BASEURI', $url);
-define('_VERSION', '1.0');
-define('_API',"https://www.swcombine.com/ws/v2.0/");
+require_once '_apk/config.php';
+
 /*
 	API links
 */
-$url_sectors = _API . "galaxy/sectors/";
-$url_systems = _API . "galaxy/systems/";
+$url_sectors = _DB['sectors'];
+$url_systems = _DB['systems'];
+$fil_sectors = _PATH['sectors'];
+$fil_systems = _PATH['systems'];
+$fil_factions = _PATH['factions'];
 /*
 	HTML SWC Galaxy Map link
 */
-$galaxymap = "https://www.swcombine.com/rules/?Galaxy_Map&sectorID=";
+$galaxymap = _GALAXYMAP;
 /*
 	Define update intervals or do force update
 	?forceupdate=all -> do it all
@@ -117,8 +114,8 @@ function flieDownloadCSV( $array, $filename = "export.csv", $delimiter="\t" )
 /*
 	Read and write all sectors and factions inside
 */
-$lastupdatesectors = fileHowOld("sectors");
-if ( (!file_exists("sectors") OR !file_exists("factions")) OR $lastupdatesectors>$updateinterval ){
+$lastupdatesectors = fileHowOld($fil_sectors);
+if ( (!file_exists($fil_sectors) OR !file_exists("factions")) OR $lastupdatesectors>$updateinterval ){
 	$start_index = 1;
 	$item_count = 50;
 	$total = 0;
@@ -137,27 +134,40 @@ if ( (!file_exists("sectors") OR !file_exists("factions")) OR $lastupdatesectors
 			$name = (string)$v['name'];
 			$uid = swcGetUid($v['uid']);
 			if ($name) {
+				// SECTOR : name
 				$sectors['name'][$uid] = $name;
+				// SECTOR : url
 				$sectors['u'][$uid] = (string)$v['href'];
+				// SECTOR : population
+				$sectors['population'][$uid] = intval($v->population);
+				// SECTOR : knownsystems
+				$sectors['knownsystems'][$uid] = intval($v->knownsystems);
+				// SECTOR : controlledby
 				$fid = swcGetUid($v->controlledby['uid']);
 				if ($fid) {
+					// FACTION : check and save
 					$sectors['faction'][$uid] = $fid;
-					$factions['name'][$fid] = (string)$v->controlledby;
-					$factions['u'][$fid] = (string)$v->controlledby['href'];
+					if (!isset($factions['name'][$fid])){
+						$factions['name'][$fid] = (string)$v->controlledby;
+						$factions['u'][$fid] = (string)$v->controlledby['href'];
+					}
 				}
 			}
 			$i++;
 		}
 		$start_index += $item_count;
 	}
-	fileSave("sectors",$sectors);
-	fileSave("factions",$factions);
+	fileSave($fil_sectors,$sectors);
+	fileSave($fil_factions,$factions);
+}else{
+	$sectors = fileLoad($fil_sectors);
+	$factions = fileLoad($fil_factions);
 }
 /*
 	Read and write all systems
 */
-$lastupdatesystems = fileHowOld("systems");
-if ( !file_exists("systems") OR $lastupdatesystems>$updateinterval){
+$lastupdatesystems = fileHowOld($fil_systems);
+if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
 	$start_index = 1;
 	$item_count = 50;
 	$total = 0;
@@ -175,24 +185,40 @@ if ( !file_exists("systems") OR $lastupdatesystems>$updateinterval){
 			$name = (string)$v['name'];
 			$uid = swcGetUid($v['uid']);
 			if ($name) {
-				$systems[$uid]['name'] = $name;
+				// SYSTEM : name
+				$systems['name'][$uid] = $name;
+				// SYSTEM : href
+				$systems['u'][$uid] = (string)$v['href'];
+				// SYSTEM : population
+				$systems['population'][$uid] = intval($v->population);
+				// SYSTEM : sector ID
+				$sid = swcGetUid($v->location->sector['uid']);
+				$systems['sector'][$uid] = $sid;
+				// SYSTEM : controlledby
+				$fid = swcGetUid($v->controlledby['uid']);
+				if ($fid){
+					// FACTION : check and save
+					$systems['faction'][$uid] = $fid;
+					if (!isset($factions['name'][$fid])){
+						$factions['name'][$fid] = (string)$v->controlledby;
+						$factions['u'][$fid] = (string)$v->controlledby['href'];
+					}
+				}
+				// SYSTEM : location inside sector
 				$c = $v->location->coordinates->galaxy;
-				$systems[$uid]['x'] = intval($c['x']);
-				$systems[$uid]['y'] = intval($c['y']);
+				$systems['x'][$uid] = intval($c['x']);
+				$systems['y'][$uid] = intval($c['y']);
 			}
 			$i++;
 		}
 		$start_index += $item_count;
 	}
-	fileSave("systems",$systems);
+	fileSave($fil_systems,$systems);
+	fileSave($fil_factions,$factions);
+}else{
+	$systems = fileLoad($fil_systems);
 }
 
-/*
-	Load data
-*/
-	$sectors = fileLoad("sectors");
-	$factions = fileLoad("factions");
-	$systems = fileLoad("systems");
 /*
 
 	Download file when ?getmap=UID
@@ -214,10 +240,12 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			while($i < $c){
 				$v=$xml->sector->systems->system[$i];
 				$sid = swcGetUid($v['uid']);
-				if (isset($systems[$sid])){
-					$system[$sid] = $systems[$sid];
+				if (isset($systems['name'][$sid])){
+					$system[$sid] = [
+						'x' => $systems['x'][$sid],
+						'y' => $systems['y'][$sid],
+					];
 				}
-				//echo $v['name'] . " -> " . $v['href'] . "\n";
 				$i++;
 			}
 		}
@@ -434,8 +462,8 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 		}
 		// add systems
 		foreach($system as $s) {
-			$y=intval($s['y']);
-			$x=intval($s['x']);
+			$y=$s['y'];
+			$x=$s['x'];
 			$map[$y][$x] = $valsystem;
 		}
 

@@ -1,152 +1,43 @@
 # swcGalaxyMapSearcher
-swCombine GalaxyMap convert to DB for easeir access to searched data, https://www.swcombine.com/
-
-![GitHub issues](https://img.shields.io/github/issues/exa18/swcGalaxyMapSearcher?style=flat-square)
-![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/1?style=flat-square)
-![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/2?style=flat-square)
-![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/3?style=flat-square)
+[swCombine GalaxyMap](https://www.swcombine.com/) download localy for easeir/faster access to searched data
+Using [API 2.0](https://www.swcombine.com/ws/v2.0/)
 
 
-## MAP Level
-https://www.swcombine.com/rules/?Galaxy_Map
+## MAP
+What data are downloaded?
 
-#### search links in GalaxyMap
+### SECTOR
 ```
-preg_match('/href=\"([\/\?\&;=\d\w\s]*)\".*alt=\"([\w]*)\"/', $input_line, $output_array);
-href=\"([\/\?\&;=\d\w]*)\".*alt=\"([\w]*)\"
+    uid
+    name
+    href
+    controlledby
+    knownsystems
+    population
 ```
-this is OK:
+### SYSTEM
 ```
-preg_match_all('/href=\"([\/\?\&;=\d\w]*)\".*alt=\"(.*)\"\s/', $input_lines, $output_array);
+    uid
+    name
+    href
+    population
+    controlledby
+    location->sector
+        uid
+    location->coordinates->galaxy
+        x
+        y
 ```
-but this too and simpler:
+### FACTION
 ```
-preg_match_all('/href=\"(.*)\".*alt=\"(.*)\"\s/', $input_lines, $output_array);
+    name
+    href
 ```
-getID
-```
-preg_match('/(\d+)/', $input_line, $output_array);
-```
+## Refresh performance
 
-## SECTOR Level:
-(list systems)
-```
-<table class="rulesTable">
-<tr>
-	<th>Name</th>
-	<th>Position</th>
-	<th>Suns</th>
-	<th>Planets</th>
-	<th>Moons</th>
-	<th>Asteroid Fields</th>
-	<th>Stations</th>
-	<th>Population</th>
-	<th>Controlled By</th>
-</tr>
-<tr>
-	<td><a href="/rules/?Galaxy_Map&amp;systemID=1125">Polith</a></td>
-	<td>15, -136</td>
-	<td>1</td>
-	<td>6</td>
-	<td>1</td>
-	<td>4</td>
-	<td>5</td>
-	<td>6,334,508,417</td>
-	<td><a href="/community/factions.php?facName=Galactic+Empire">Galactic Empire</a></td>
-</tr>
-</table>
-```
+SECTORs : ~30s\
+SYSTEMs : ~60s
 
-## SYSTEM Level
-#### Planets list:
-```
-<table class="rulesTable sortable" align="left">
-<tr>
-    <th>Image</th>
-    <th>Name</th>
-    <th>Position</th>
-    <th>Type</th>
-    <th>Size</th>
-    <th>Population</th>
-    <th>Controlled By</th>
-    <th>Homeworld</th>
-</tr>
-<tr>
-    <td><img src="https://img.swcombine.com//galaxy/planets/11/mini.gif" alt="Polith Asteroid Cloud" /></td>
-    <td><a href="/rules/?Galaxy_Map&amp;planetID=2864">Polith Asteroid Cloud</a></td>
-    <td>1, 11</td>
-    <td>Asteroid Field</td>
-    <td>1x1</td>
-    <td>3,092</td>
-    <td><a href="/community/factions.php?facName=Galactic+Empire">Galactic Empire</a></td>
-    <td>-</td>
-</tr>
-</table>
-```
-#### Stations list:
-```
-<table class="rulesTable sortable" align="left">
-<tr>
-    <th>Image</th>
-    <th>Name</th>
-    <th>Position</th>
-    <th>Type</th>
-    <th>Owner</th>
-</tr>
-<tr>
-    <td><img src="https://img.swcombine.com//stations/20/small.gif" alt="Golan II" /></td>
-    <td>Polith  Defender Kanakorm</td>
-    <td>11, 9</td>
-    <td><a href="/rules/?Space_Stations&amp;ID=20">Golan II</a></td>
-    <td><a href="/community/factions.php?facName=Galactic+Empire">Galactic Empire</a></td>
-</tr>
-</table>
-```
-## PLANET level:
-#### City names:
-```
-preg_match_all('/reg_pointCaption\(\"(.*)\".*(\d+\,\d+)\)/',  $input_lines, $output_array);
-```
-
-```
-bjMap.reg_areaCaption("Forest",6,19,12,19);
-objMap.reg_areaCaption("Ocean",13,19,19,19);
-objMap.reg_pointCaption("Thyferra 09-00",9,0);
-objMap.reg_pointCaption("Sheridan",10,0);
-```
-
-## Instalation
-
-#### Database
-###### Level 0: Sectors
-```
-CREATE TABLE `sector` ( `sectorID` INT NOT NULL , `sectorName` TEXT NOT NULL ) ENGINE = InnoDB; 
-```
-###### Level 1: Systems
-```
-CREATE TABLE `system` ( `sectorID` INT NOT NULL , `systemID` INT NOT NULL , `systemName` TEXT NOT NULL , `systemPosition` TEXT NOT NULL , `systemSuns` TEXT NOT NULL , `systemPlanets` TEXT NOT NULL , `systemMoons` TEXT NOT NULL , `systemAsteroidFields` TEXT NOT NULL , `systemStations` TEXT NOT NULL , `systemPopulation` TEXT NOT NULL , `systemControlledBy` TEXT NOT NULL ) ENGINE = InnoDB; 
-```
-###### Level 2: Planets list
-```
-CREATE TABLE `planet` ( `systemID` INT NOT NULL , `planetID` INT NOT NULL , `planetName` TEXT NOT NULL , `planetPosition` TEXT NOT NULL , `planetType` TEXT NOT NULL , `planetSize` TEXT NOT NULL , `planetPopulation` TEXT NOT NULL , `planetControlledBy` TEXT NOT NULL , `planetHomeworld` TEXT NOT NULL ) ENGINE = InnoDB; 
-```
-###### Level 2: Stations list
-```
-CREATE TABLE `station` ( `systemID` INT NOT NULL , `stationName` TEXT NOT NULL , `stationPosition` TEXT NOT NULL , `stationType` TEXT NOT NULL , `stationOwner` TEXT NOT NULL ) ENGINE = InnoDB; 
-```
-###### Level 3: Surface
-```
-CREATE TABLE `surface` ( `planetID` INT NOT NULL `surfaceID` TEXT NOT NULL , , `surfaceCaption` TEXT NOT NULL , `surfacePosition` TEXT NOT NULL ) ENGINE = InnoDB;
-```
-###### Race index
-```
-CREATE TABLE `races` ( `raceID` INT NOT NULL , `raceName` TEXT NOT NULL ) ENGINE = InnoDB; 
-```
-
-## Performance
-1. Level 1 & 0 : Read sector and systems: ~4,5 minutes
-2. Level 2 : Read systems and get planets and stations: ~16,5 minutes
-3. Level 3 : Read planets and get surface (only custom): ??
 
 ## API v2.0 guides
 
