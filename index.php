@@ -22,6 +22,7 @@ $galaxymap = _GALAXYMAP;
 	?forceupdate=sectors
 	?forceupdate=systems
 */
+/*
 $updateinterval = 365;
 $updatesectors = false;
 $updatesystems = false;
@@ -40,6 +41,7 @@ if ( $forceupdate = htmlspecialchars($_GET["forceupdate"]) ){
 		default: break;
 	}
 }
+*/
 /*
 
 	FUNTIONS
@@ -121,6 +123,7 @@ function flieDownloadCSV( $array, $filename = "export.csv", $delimiter="\t" )
 /*
 	Read and write all sectors and factions inside
 */
+/*
 $lastupdatesectors = fileHowOld($fil_sectors);
 if ( (!file_exists($fil_sectors) OR !file_exists("factions")) OR $lastupdatesectors>$updateinterval ){
 	$start_index = 1;
@@ -167,9 +170,11 @@ if ( (!file_exists($fil_sectors) OR !file_exists("factions")) OR $lastupdatesect
 	$sectors = fileLoad($fil_sectors);
 	$factions = fileLoad($fil_factions);
 }
+*/
 /*
 	Read and write all systems
 */
+/*
 $lastupdatesystems = fileHowOld($fil_systems);
 if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
 	$start_index = 1;
@@ -219,7 +224,10 @@ if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
 }else{
 	$systems = fileLoad($fil_systems);
 }
-
+*/
+$sectors = fileLoad($fil_sectors);
+$factions = fileLoad($fil_factions);
+$systems = fileLoad($fil_systems);
 /*
 
 	Download file when ?getmap=UID
@@ -628,7 +636,7 @@ echo trim('<html><head>
 	$api = $api[1];
 
 	echo '</head><body><div class="container"><div class="row"><div>';
-	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $meta['site'] . '" /></div><h6><b>api ' . $api .'</b><br>'. ($updateinterval - min($lastupdatesectors,$lastupdatesystems)) . ' days till update '.$meta['footage'].'</h6></div>';
+	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $meta['site'] . '" /></div><h6><b>api ' . $api .'</b><br>'.$meta['footage'].'</h6></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION . '</span><br><small>'.$meta['desc'].'</small></h1></div>';
 	echo '<a href="'.$meta['download'].'" type="button" class="btn btn-success btn-sm btn-block">Download Template to work with</a>';
 	echo '<div class="inputfield"><input type="text" class="form-control" id="mySearchable" onkeyup="mySearchableList()" placeholder="Search . . .">
