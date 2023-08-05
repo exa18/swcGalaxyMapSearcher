@@ -7,3 +7,4 @@ files/tmp/*
 _db/*
 !.htaccess
 *.txt
+tests/*
