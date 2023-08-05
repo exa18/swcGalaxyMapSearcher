@@ -326,6 +326,9 @@ exit();
 	$c_subcolor = '#ccc';
 	$c_acclink = '#345';
 	
+	$api = array_reverse(explode('/',_API));
+	$api = $api[1];
+
 	$links = array(
 		'css' => 'https://cdnjs.cloudflare.com/ajax/libs/twitter-bootstrap/3.4.1/css/bootstrap.min.css',
 		'fontawesome' => 'https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css',
@@ -335,7 +338,7 @@ exit();
 	$meta=array(
 		"fbapi" => '',
 		//"tags" => '',
-		"footage" => '<a class="btn btn-xs btn-primary" href="https://github.com/exa18/swcGalaxyMapSearcher"><i class="fab fa-github"></i> Learn more</a>',
+		"footage" => '<a class="btn btn-xs btn-primary btn-block" href="https://github.com/exa18/swcGalaxyMapSearcher"><b>API ' . $api .'</b>&nbsp;<i class="fab fa-github"></i>&nbsp;Learn more</a>',
 		"download" => 'swcGalaxyMapSearcherTEMPLATE.xlsx',
 		"img" => './_img/swcmapgen.png',
 		"desc" => 'prepare sector map to paste in sheet<br><small>tab delimited and openable as text, despite CSV</small>',
@@ -371,7 +374,7 @@ echo trim('<html><head>
 	@import url(https://fonts.googleapis.com/css?family=Open+Sans:400,700&display=swap&subset=latin-ext);
 	*{margin:0;padding:0;-webkit-box-sizing:border-box;-moz-box-sizing:border-box;box-sizing:border-box}
 	body{background:<?=$c_background?>;font-family:Open Sans,Arial,Helvetica,Sans-serif,Verdana,Tahoma;width:100%;height:100%}
-	.row{display:flex;justify-content:center;align-items:center;height:100%;margin:auto}
+	.row{display:grid;justify-content:center;}
 	.row>div{text-align:center}
 	h1 small{color:<?=$c_subcolor?>}
 	.username{bottom:0;color:<?=$c_base?>;padding:30px 15px 4px;width:100%}
@@ -426,11 +429,10 @@ echo trim('<html><head>
 	}
 </script>
 <?php
-	$api = array_reverse(explode('/',_API));
-	$api = $api[1];
+
 
 	echo '</head><body><div class="container"><div class="row"><div>';
-	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $meta['site'] . '" /></div><h6><b>api ' . $api .'</b><br>'.$meta['footage'].'</h6></div>';
+	echo '<div class="swc_logo"><div class="swc_img"><img src="' . $meta['img'] . '" alt="' . $meta['site'] . '" /></div><h6>'.$meta['footage'].'</h6></div>';
 	echo '<div class="topic"><h1>'.$meta['site'].'&nbsp;&nbsp;<span class="badge">'. _VERSION . '</span><br><small>'.$meta['desc'].'</small></h1></div>';
 	echo '<a href="'.$meta['download'].'" type="button" class="btn btn-success btn-sm btn-block">Download Template to work with</a>';
 	echo '<div class="inputfield"><input type="text" class="form-control" id="mySearchable" onkeyup="mySearchableList()" placeholder="Search . . .">
