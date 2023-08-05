@@ -5,7 +5,9 @@
 ## MAP
 What data are downloaded?
 
-### SECTOR (25)
+### STAGE 1
+
+#### SECTOR (25)
 ```
     uid
     name
@@ -13,7 +15,7 @@ What data are downloaded?
     knownsystems
     population
 ```
-### SYSTEM (9)
+#### SYSTEM (9)
 ```
     uid
     name
@@ -25,59 +27,70 @@ What data are downloaded?
         x
         y
 ```
-### FACTION (20)
+#### FACTION (20)
 ```
     uid
     name
 ```
-## Refresh performance
 
-SECTORs : ~10s\
-SYSTEMs : ~25s
+## UPDATE
 
-
-## API v2.0 guides
-
-#### TYPES
-
+### Performance
 ```
-20 : faction
-8 : planet
-7 : city
-9 : system
-25 : sector
-24 : terrain
-1 : user
-22 : race
-5 : station
-18 : weapon
-16 : material
-3 : vehicles
-13 : droids
-4 : facility
-12 : items
-10 : npc
-11 : creatures
+    STAGE 1
+        SECTORs : ~10s
+        SYSTEMs : ~25s
+
+    STAGE 2
+        PLANETS
+
+    STAGE 3
+        CITIES
 ```
 
-#### LINKS
+### How and what
+Use cron and run script from **_update.php**
+```
+    STAGE 1 update
+        sectors
+        systems
+        faction
+    STAGE 2 update
+        planets
+        stations
+    STAGE 3 update
+        cities
+```
 
-##### GALAXY
-[cities](https://www.swcombine.com/ws/v2.0/galaxy/cities/)
-[systems](https://www.swcombine.com/ws/v2.0/galaxy/systems/)
-[sectors](https://www.swcombine.com/ws/v2.0/galaxy/sectors/)
-[factions](https://www.swcombine.com/ws/v2.0/factions/)
-##### TYPES
-[planets](https://www.swcombine.com/ws/v2.0/types/planets)
-[terrain](https://www.swcombine.com/ws/v2.0/types/terrain)
-[races](https://www.swcombine.com/ws/v2.0/types/races)
-[stations](https://www.swcombine.com/ws/v2.0/types/stations)
-[weapons](https://www.swcombine.com/ws/v2.0/types/weapons)
-[materials](https://www.swcombine.com/ws/v2.0/types/materials)
-[vehicles](https://www.swcombine.com/ws/v2.0/types/vehicles)
-[droids](https://www.swcombine.com/ws/v2.0/types/droids)
-[facilities](https://www.swcombine.com/ws/v2.0/types/facilities)
-[items](https://www.swcombine.com/ws/v2.0/types/items)
-[npcs](https://www.swcombine.com/ws/v2.0/types/npcs)
-[creatures](https://www.swcombine.com/ws/v2.0/types/creatures)
+## API v2.0 links
+
+### Types used
+
+|ID|TYPE-LINK|
+|---|---|
+|25|[sectors](https://www.swcombine.com/ws/v2.0/galaxy/sectors/)|
+|9|[systems](https://www.swcombine.com/ws/v2.0/galaxy/systems/)|
+|20|[factions](https://www.swcombine.com/ws/v2.0/factions/)|
+|8|[planets](https://www.swcombine.com/ws/v2.0/galaxy/planets/)|
+|-|[planet type](https://www.swcombine.com/ws/v2.0/types/planets)|
+|7|[cities](https://www.swcombine.com/ws/v2.0/galaxy/cities/)|
+|5|[stations](https://www.swcombine.com/ws/v2.0/galaxy/stations)|
+|-|[station type](https://www.swcombine.com/ws/v2.0/types/stations)|
+
+### Other types
+
+|ID|TYPE-LINK|
+|---|---|
+|1|user|
+|24|[terrain](https://www.swcombine.com/ws/v2.0/types/terrain)|
+|22|[races](https://www.swcombine.com/ws/v2.0/types/races)|
+|18|[weapons](https://www.swcombine.com/ws/v2.0/types/weapons)|
+|16|[materials](https://www.swcombine.com/ws/v2.0/types/materials)|
+|3|[vehicles](https://www.swcombine.com/ws/v2.0/types/vehicles)|
+|13|[droids](https://www.swcombine.com/ws/v2.0/types/droids)|
+|4|[facilities](https://www.swcombine.com/ws/v2.0/types/facilities)|
+|12|[items](https://www.swcombine.com/ws/v2.0/types/items)|
+|10|[npcs](https://www.swcombine.com/ws/v2.0/types/npcs)|
+|11|[creatures](https://www.swcombine.com/ws/v2.0/types/creatures)|
+
 

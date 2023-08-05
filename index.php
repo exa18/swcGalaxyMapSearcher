@@ -1,6 +1,6 @@
 <?php
 require_once '_apk/config.php';
-
+require_once '_apk/functions.php';
 /*
 	API links
 */
@@ -17,213 +17,7 @@ $fil_factions = _PATH['factions'];
 */
 $galaxymap = _GALAXYMAP;
 /*
-	Define update intervals or do force update
-	?forceupdate=all -> do it all
-	?forceupdate=sectors
-	?forceupdate=systems
-*/
-/*
-$updateinterval = 365;
-$updatesectors = false;
-$updatesystems = false;
-if ( $forceupdate = htmlspecialchars($_GET["forceupdate"]) ){
-	switch($forceupdate){
-		case "all":
-			$updatesectors = true;
-			$updatesystems = true;
-			break;
-		case "sectors":
-			$updatesectors = true;
-			break;
-		case "systems":
-			$updatesystems = true;
-			break;
-		default: break;
-	}
-}
-*/
-/*
-
-	FUNTIONS
-
-*/
-function get_xml_from_url($url){
-	$ch = curl_init($url);
-
-	curl_setopt($ch, CURLOPT_URL, $url);
-	curl_setopt($ch, CURLOPT_RETURNTRANSFER, true);
-	//curl_setopt($ch, CURLOPT_USERAGENT, 'Mozilla/5.0 (Windows; U; Windows NT 5.1; en-US; rv:1.8.1.13) Gecko/20080311 Firefox/2.0.0.13');
-
-	$xmlstr = curl_exec($ch);
-	curl_close($ch);
-
-	return $xmlstr;
-}
-
-function swcGetUid($uid){
-	if ($uid) {
-		$uid = explode(':',$uid);
-		$uid = array_pop($uid);
-		return intval($uid);
-	}
-	return NULL;
-}
-function swcMakeUid($uid,$code){
-		return $code . "%3A" . $uid;
-}
-
-function absLong($a,$b){
-	return abs( max($a,$b) - min($a,$b) );
-}
-function fileLoad($file){
-	$c = file_get_contents($file);
-	$json = json_decode($c,true);
-	return $json;
-}
-function fileSave($file,$c){
-	$json = json_encode($c);
-	file_put_contents($file,$json);
-}
-function fileCleanName($string, $is_filename = TRUE) {
-	$string = preg_replace('/[^\w\-'. ($is_filename ? '~_\.' : ''). ']+/u', '-', $string);
-	return mb_strtolower(preg_replace('/--+/u', '-', $string), 'UTF-8');
-}
-function fileHowOld($file){
-	if (file_exists($file)) {
-		return date('Ymd') - date('Ymd',filemtime($file));
-	}
-	return -1;
-}
-function flieDownloadCSV( $array, $filename = "export.csv", $delimiter="\t" )
-{
-	$filename = fileCleanName($filename) . ".csv";
-	header( 'Content-Type: application/csv' );
-	header( 'Content-Disposition: attachment; filename="' . $filename . '";' );
-
-	// clean output buffer
-	ob_end_clean();
-	
-	$handle = fopen( 'php://output', 'w' );
-
-	// use keys as column titles
-	//fputcsv( $handle, array_keys( $array['0'] ), $delimiter );
-
-	foreach ( $array as $value ) {
-		fputcsv( $handle, $value, $delimiter );
-	}
-
-	fclose( $handle );
-
-	// flush buffer
-	ob_flush();
-	
-	// use exit to get rid of unexpected output afterward
-	exit();
-}
-/*
-	Read and write all sectors and factions inside
-*/
-/*
-$lastupdatesectors = fileHowOld($fil_sectors);
-if ( (!file_exists($fil_sectors) OR !file_exists("factions")) OR $lastupdatesectors>$updateinterval ){
-	$start_index = 1;
-	$item_count = 50;
-	$total = 0;
-	$sectors = [];
-	$factions = [];
-	
-	$i = -1;
-	while($i<$total){
-		$file = get_xml_from_url($url_sectors."?start_index=".$start_index."&item_count=".$item_count);
-		$xml = simplexml_load_string($file);
-		if ($total==0){
-			$total = $xml->sectors['total'];
-			$i = 0;
-		}
-		foreach($xml->sectors->sector as $v){
-			$name = (string)$v['name'];
-			$uid = swcGetUid($v['uid']);
-			if ($name) {
-				// SECTOR : name
-				$sectors['name'][$uid] = $name;
-				// SECTOR : population
-				$sectors['population'][$uid] = intval($v->population);
-				// SECTOR : knownsystems
-				$sectors['knownsystems'][$uid] = intval($v->knownsystems);
-				// SECTOR : controlledby
-				$fid = swcGetUid($v->controlledby['uid']);
-				if ($fid) {
-					// FACTION : check and save
-					$sectors['faction'][$uid] = $fid;
-					if (!isset($factions['name'][$fid])){
-						$factions['name'][$fid] = (string)$v->controlledby;
-					}
-				}
-			}
-			$i++;
-		}
-		$start_index += $item_count;
-	}
-	fileSave($fil_sectors,$sectors);
-	fileSave($fil_factions,$factions);
-}else{
-	$sectors = fileLoad($fil_sectors);
-	$factions = fileLoad($fil_factions);
-}
-*/
-/*
-	Read and write all systems
-*/
-/*
-$lastupdatesystems = fileHowOld($fil_systems);
-if ( !file_exists($fil_systems) OR $lastupdatesystems>$updateinterval){
-	$start_index = 1;
-	$item_count = 50;
-	$total = 0;
-	$systems = [];
-	
-	$i = -1;
-	while($i<$total){
-		$file = get_xml_from_url($url_systems."?start_index=".$start_index."&item_count=".$item_count);
-		$xml = simplexml_load_string($file);
-		if ($total==0){
-			$total = $xml->systems['total'];
-			$i = 0;
-		}
-		foreach($xml->systems->system as $v){
-			$name = (string)$v['name'];
-			$uid = swcGetUid($v['uid']);
-			if ($name) {
-				// SYSTEM : name
-				$systems['name'][$uid] = $name;
-				// SYSTEM : population
-				$systems['population'][$uid] = intval($v->population);
-				// SYSTEM : sector ID
-				$sid = swcGetUid($v->location->sector['uid']);
-				$systems['sector'][$uid] = $sid;
-				// SYSTEM : controlledby
-				$fid = swcGetUid($v->controlledby['uid']);
-				if ($fid){
-					// FACTION : check and save
-					$systems['faction'][$uid] = $fid;
-					if (!isset($factions['name'][$fid])){
-						$factions['name'][$fid] = (string)$v->controlledby;
-					}
-				}
-				// SYSTEM : location inside sector
-				$c = $v->location->coordinates->galaxy;
-				$systems['x'][$uid] = intval($c['x']);
-				$systems['y'][$uid] = intval($c['y']);
-			}
-			$i++;
-		}
-		$start_index += $item_count;
-	}
-	fileSave($fil_systems,$systems);
-	fileSave($fil_factions,$factions);
-}else{
-	$systems = fileLoad($fil_systems);
-}
+	Read data
 */
 $sectors = fileLoad($fil_sectors);
 $factions = fileLoad($fil_factions);
@@ -645,10 +439,10 @@ echo trim('<html><head>
 	
 		$list = $sectors['name'];
 		asort($list);
-		foreach($list as $k => $v) {
-			$i = $sectors['faction'][$k];
-			$controlled = $factions['name'][$i];
-			echo '<a href="?getmap='.$k.'" class="list-box list-group-item">' . $v . '<span class="faction"'.($controlled?'':' style="display:none"').'>/' . $controlled . '/</span></a>';
+		foreach($list as $uid => $name) {
+			$fid = $sectors['faction'][$uid];
+			$controlled = $factions['name'][$fid];
+			echo '<a href="?getmap='.$uid.'" class="list-box list-group-item">' . $name . '<span class="faction"'.($controlled?'':' style="display:none"').'>/' . $controlled . '/</span></a>';
 
 		}
 	echo '</div>';
