@@ -316,7 +316,7 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 				$iy++;
 			}
 		/*
-			Fill Border between points
+			Join points (contour)
 		*/
 		$anch = [];
 		$i = 0;
@@ -330,7 +330,7 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			$y = $cc['y'];
 			$map[$y][$x] = $val;
 		
-				$anch[] = [
+ 				$anch[] = [
 					'x' => $x,
 					'y' => $y
 					];
@@ -340,28 +340,22 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 				$x2 = $anch[1]['x'];
 				$y1 = $anch[0]['y'];
 				$y2 = $anch[1]['y'];
-				$lx = absLong($x1,$x2);
-				$ly = absLong($y1,$y2);
-				if ( $ly OR $lx ){
-					if ($lx>1 AND $ly==0){
-						$z = min($x1,$x2);
-						$e = max($x1,$x2);
-						$y = $y1;
-						while($z<$e){
-							$map[$y][$z] = $val;
-							$z++;
-						}
+				if ($y1==$y2){
+					$z = min($x1,$x2);
+					$e = max($x1,$x2);
+					$y = $y1;
+					while($z<$e){
+						$map[$y][$z] = $val;
+						$z++;
 					}
-					if ($ly>1 AND $lx==0){
-						$z = min($y1,$y2);
-						$e = max($y1,$y2);
-						$x = $x1;
-						while($z<$e){
-							$map[$z][$x] = $val;
-							$z++;
-						}
+				}elseif ($x1==$x2){
+					$z = min($y1,$y2);
+					$e = max($y1,$y2);
+					$x = $x1;
+					while($z<$e){
+						$map[$z][$x] = $val;
+						$z++;
 					}
-					
 				}
 				array_shift($anch);
 			}
@@ -372,17 +366,47 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
    			algorythm idea:
    			source: https://takeuforward.org/graph/flood-fill-algorithm-graphs/
 		*/
-		$stack = [];
-		// find first free point inside
-			$x = $cords[0]['x'];
-			$y = $cords[0]['y'];
+		/*
+			First find point inside
+		*/
+		// select middle point
+		$y = $border['min']['y']+intval($h/2);
+		$x = $border['min']['x']+intval($w/2);
+		// check IF realy inside
+		$z = $y;
 		while(true){
-			if ($map[$y][$x]){
-				$x++;
-			}else{
-				break;
+			$break_a = false;
+			$i = $border['min']['x'];
+			while(true){
+				$v=$map[$z][$i];
+				if ($v){
+					$break_a = true;
+				}elseif($break_a AND empty($v)){
+					break;
+				}
+				$i++;
 			}
+			$break_b = false;
+			$j = $border['max']['x'];
+			while(true){
+				$v=$map[$z][$j];
+				if ($v){
+					$break_b = true;
+				}elseif($break_b AND empty($v)){
+					break;
+				}
+				$j--;
+			}
+			if ($break_a AND $break_b) { break; }
+			$z++;
 		}
+		$y = $z;
+		$x = $i;
+		
+		/*
+		fill
+		*/
+		$stack = [];
 		$stack[] = [
 			'x' => $x,
 			'y' => $y	
@@ -467,8 +491,13 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			$x=$s['x'];
 			$map[$y][$x] = $valsystem;
 		}
-
-		// prepare CSV
+/*
+foreach($map as $v){ echo implode("\t",$v)."\n"; }	// TEST
+exit();
+*/
+		/*
+			Prepare array to drop as CSV
+		*/
 			$csv = [];
 			// add first row
 			$csv[] = $rowx;
