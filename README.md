@@ -1,6 +1,8 @@
 # swcGalaxyMapSearcher
 [swCombine GalaxyMap](https://www.swcombine.com/) download localy for easeir/faster access to searched data. Using [API 2.0](https://www.swcombine.com/ws/v2.0/)
 
+![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/1?style=flat-square)
+![GitHub milestone](https://img.shields.io/github/milestones/progress/exa18/swcGalaxyMapSearcher/4?style=flat-square)
 
 ## MAP
 What data are downloaded?
