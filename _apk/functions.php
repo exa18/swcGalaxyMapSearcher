@@ -28,10 +28,6 @@ function swcGetUid($uid){
 function swcMakeUid($uid,$code){
 		return $code . "%3A" . $uid;
 }
-
-function absLong($a,$b){
-	return abs( max($a,$b) - min($a,$b) );
-}
 function fileLoad($file){
 	$c = file_get_contents($file);
 	$json = json_decode($c,true);

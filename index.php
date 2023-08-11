@@ -85,9 +85,9 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 		$border['max']['y'] +=1;
 
 		// WIDTH
-		$w = absLong($border['max']['x'],$border['min']['x']) +1;
+		$w = abs($border['max']['x'] - $border['min']['x']) +1;
 		// HIGTH
-		$h = absLong($border['max']['y'],$border['min']['y']) +1;
+		$h = abs($border['max']['y'] - $border['min']['y']) +1;
 		// MARKS
 		$val = 1;	// area
 		$valborder = 2;	// border -> space between sectors
@@ -293,10 +293,10 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			$x=$s['x'];
 			$map[$y][$x] = $valsystem;
 		}
-/*
+/* 
 foreach($map as $v){ echo implode("\t",$v)."\n"; }	// TEST
 exit();
-*/
+ */
 		/*
 			Prepare array to drop as CSV
 		*/
