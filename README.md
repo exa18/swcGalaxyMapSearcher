@@ -42,6 +42,7 @@ What data are downloaded?
     STAGE 1
         SECTORs : ~10s
         SYSTEMs : ~25s
+        ( FACTION )
 
     STAGE 2
         PLANETS

@@ -14,6 +14,8 @@ define('_PATH',[
 	'sectors' => _DATA . "sectors",
 	'systems' => _DATA . "systems",
 	'factions' => _DATA . "factions",
+	'planets' => _DATA . "planets",
+	'stations' => _DATA . "stations"
 ]);
 define('_DB',[
 		'sectors' => _API . "galaxy/sectors/",
