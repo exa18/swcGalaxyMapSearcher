@@ -1,6 +1,5 @@
 <?php set_time_limit(180);
 require_once '_apk/config.php';
-require_once '_apk/functions.php';
 /*
 	API links
 */
