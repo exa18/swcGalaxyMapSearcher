@@ -1,6 +1,5 @@
 <?php
 require_once '_apk/config.php';
-require_once '_apk/functions.php';
 /*
 	API links
 */
@@ -164,11 +163,6 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 			$i++;
 		}
 		/*
-			Flood fill 4x
-   			algorythm idea:
-   			source: https://takeuforward.org/graph/flood-fill-algorithm-graphs/
-		*/
-		/*
 			First find point inside
 		*/
 		// select middle point
@@ -204,9 +198,10 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 		}
 		$y = $z;
 		$x = $i;
-		
 		/*
-		fill
+			Flood fill 8x
+   			algorythm idea:
+   			source: https://takeuforward.org/graph/flood-fill-algorithm-graphs/
 		*/
 		$stack = [];
 		$stack[] = [
@@ -219,6 +214,14 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 				$x = $s['x'];
 				$y = $s['y'];
 				array_shift($stack);
+				/*
+					Check verical and horizontal
+
+					-X-
+					X-X
+					-X-
+
+				*/
 				if ( empty($map[$y][$x-1]) ){
 					$stack[] = [
 						'x' => $x-1,
@@ -246,6 +249,42 @@ if ( $uid = htmlspecialchars($_GET["getmap"]) ){
 						'y' => $y-1	
 					];
 					$map[$y-1][$x] = $val;
+				}
+				/*
+					Check diagonally
+
+					X-X
+					---
+					X-X
+
+				*/
+				if ( empty($map[$y-1][$x-1]) ){
+					$stack[] = [
+						'x' => $x-1,
+						'y' => $y-1
+					];
+					$map[$y-1][$x-1] = $val;
+				}
+				if ( empty($map[$y-1][$x+1]) ){
+					$stack[] = [
+						'x' => $x+1,
+						'y' => $y-1
+					];
+					$map[$y-1][$x+1] = $val;
+				}
+				if ( empty($map[$y+1][$x-1]) ){
+					$stack[] = [
+						'x' => $x-1,
+						'y' => $y+1
+					];
+					$map[$y+1][$x-1] = $val;
+				}
+				if ( empty($map[$y+1][$x+1]) ){
+					$stack[] = [
+						'x' => $x+1,
+						'y' => $y+1
+					];
+					$map[$y+1][$x+1] = $val;
 				}
 			}
 		}
